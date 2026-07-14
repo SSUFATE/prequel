@@ -1,4 +1,4 @@
-### 📄Convention
+# 📄Backend Convention
 
 ## Layer Structure
 
@@ -7,7 +7,7 @@
 ### Branch 종류
 
 | Branch | Description |
-|---|---|
+|---------|-------------|
 | main | 배포 가능한 안정 버전 |
 | develop | 개발 통합 브랜치 |
 | feat/* | 새로운 기능 개발 |
@@ -18,24 +18,32 @@
 | chore/* | 설정 및 기타 작업 |
 | hotfix/* | 긴급 수정 |
 
+---
+
 ### Branch Naming
 
-형식: `type/#이슈번호-작업내용`
+형식
+type/#이슈번호-작업내용
 
-예시: `feat/#12-login-api`
+예시
+feat/#12-login-api
 
-## ✨ Commit Message
 
-형식: `Type: 작업 내용`
+## ✨Commit Message
 
-예시:
+형식
+Type: 작업 내용
+
+예시
 feat: 로그인 API 구현
 fix: JWT 토큰 검증 오류 수정
+
+---
 
 ### Commit Type
 
 | Type | Description |
-|---|---|
+|------|-------------|
 | feat | 새로운 기능 |
 | fix | 버그 수정 |
 | refactor | 리팩토링 |
@@ -47,6 +55,8 @@ fix: JWT 토큰 검증 오류 수정
 | ci | CI/CD 관련 |
 | perf | 성능 개선 |
 | revert | 이전 커밋 되돌리기 |
+
+---
 
 ### Rules
 
