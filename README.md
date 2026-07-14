@@ -1,10 +1,6 @@
-📄Backend Convention
+### 📄Convention
 
 ## Layer Structure
-backend
-└── app
-├── main.py
-...
 
 ## 🌱 Branch Strategy
 
