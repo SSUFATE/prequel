@@ -8,7 +8,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from pwdlib import PasswordHash
-import crud
+import crud.user as user_crud
 from database import get_db
 import models
 
@@ -57,7 +57,7 @@ def create_access_token(user_id: int) -> str:
     return access_token
 
 # Swagger Authorization와 Bearer Token 인증에 사용
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/login")
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 # JWT 검사, 현재 로그인 사용자 반환
 def get_authenticated_user(
@@ -87,7 +87,7 @@ def get_authenticated_user(
     except (JWTError, ValueError, TypeError):
         raise authentication_error
     
-    authenticated_user = crud.get_user_by_id(
+    authenticated_user = user_crud.get_user_by_id(
         user_id=user_id,
         db=db
     )
