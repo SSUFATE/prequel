@@ -54,8 +54,9 @@ def update_user(db: Session, db_user: models.User, user_update: UserUpdate):
 
     # 수정 정보에 비밀번호가 있다면 비밀번호 해싱
     if "password" in update_data:
-        update_data["password"] = hash_password(
-            update_data["password"]
+        plain_password = update_data.pop("password")
+        update_data["password_hash"] = hash_password(
+            plain_password
         )
 
     for field, value in update_data.items():
@@ -70,3 +71,4 @@ def update_user(db: Session, db_user: models.User, user_update: UserUpdate):
 def delete_user(db: Session, db_user: models.User):
     db.delete(db_user)
     db.commit()
+    return db_user
