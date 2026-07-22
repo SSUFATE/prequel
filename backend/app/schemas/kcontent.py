@@ -1,4 +1,5 @@
 ### Pydantic 모델: API 요청/응답 데이터 정의
+
 from pydantic import BaseModel, ConfigDict
 
 # K-콘텐츠 응답

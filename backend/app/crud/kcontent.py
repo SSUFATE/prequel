@@ -42,3 +42,12 @@ def get_kcontents(
         "size": size,
         "items": items
     }
+
+# K콘텐츠 하나 조회
+def get_kcontent_by_id(db: Session, content_id: int):
+    return (
+        db.query(models.KContent)
+        .filter(
+            models.KContent.content_id == content_id
+        ).first()
+    )
