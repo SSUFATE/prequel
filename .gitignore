@@ -1,7 +1,7 @@
-backend/venv/
-backend/__pycache__/
-backend/*.pyc
-backend/.env
+.venv/
+__pycache__/
+*.py[cod]
+.env
 
 frontend/node_modules/
 frontend/.next/
@@ -10,4 +10,6 @@ frontend/.env*
 frontend/next-env.d.ts
 frontend/*.tsbuildinfo
 
+.vscode/
 .DS_Store
+Thumbs.db
