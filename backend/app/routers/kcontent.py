@@ -1,6 +1,8 @@
+### K콘텐츠 목록 조회 API
+
 from fastapi import APIRouter, Depends, Query
 from schemas import KContentListResponse
-import backend.app.crud.user as user
+import crud.user as user_crud
 from database import get_db
 from sqlalchemy.orm import Session
 
@@ -30,7 +32,7 @@ def read_kcontents(
     ),
     db: Session = Depends(get_db)
 ):
-    return user.get_kcontents(
+    return user_crud.get_kcontents(
         db=db,
         search=search,
         content_type=content_type,
