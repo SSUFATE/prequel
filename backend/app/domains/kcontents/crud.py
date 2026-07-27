@@ -1,7 +1,8 @@
 ### DB 작업 함수
 
 from sqlalchemy.orm import Session
-import models
+from app.domains.kcontents.model import KContent
+
 
 # KContent 목록 조회
 def get_kcontents(
@@ -11,18 +12,18 @@ def get_kcontents(
     page: int = 1,
     size: int = 10
 ):
-    query = db.query(models.KContent)
+    query = db.query(KContent)
 
     # 제목 검색
     if search:
         query = query.filter(
-            models.KContent.title.ilike(f"%{search}%")
+            KContent.title.ilike(f"%{search}%")
         )
 
     # 콘텐츠 종류 필터
     if content_type:
         query = query.filter(
-            models.KContent.content_type.ilike(f"%{content_type}%")
+            KContent.content_type.ilike(f"%{content_type}%")
         )
 
     # 조건에 맞는 전체 콘텐츠 개수
@@ -30,7 +31,7 @@ def get_kcontents(
 
     # 페이지네이션
     items = (
-        query.order_by(models.KContent.content_id.asc())
+        query.order_by(KContent.content_id.asc())
         .offset((page - 1) * size)
         .limit(size)
         .all()
@@ -46,8 +47,8 @@ def get_kcontents(
 # K콘텐츠 하나 조회
 def get_kcontent_by_id(db: Session, content_id: int):
     return (
-        db.query(models.KContent)
+        db.query(KContent)
         .filter(
-            models.KContent.content_id == content_id
+            KContent.content_id == content_id
         ).first()
     )

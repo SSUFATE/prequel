@@ -1,9 +1,13 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import String, Integer, SmallInteger, ForeignKey, DateTime
+
+from app.database import Base
+from sqlalchemy import DateTime, ForeignKey, Integer, SmallInteger, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.core.database import Base
-from backend.app.models.content import KContent, LiteraryWork
+
+from app.domains.kcontents.model import KContent
+from app.domains.literatures.model import LiteraryWork
+
 
 class Tag(Base):
     __tablename__ = "Tag"

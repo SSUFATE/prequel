@@ -1,9 +1,11 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import String, Integer, Text, ForeignKey, DateTime
+
+from app.database import Base
+from app.domains.kcontents.model import LiteraryWork
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.core.database import Base
-from backend.app.models.content import LiteraryWork
+
 
 class Translation(Base):
     __tablename__ = "Translation"

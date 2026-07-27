@@ -2,6 +2,7 @@
 
 from pydantic import BaseModel, ConfigDict
 
+
 # K-콘텐츠 응답
 class KContentResponse(BaseModel):
     kcontent_id: int

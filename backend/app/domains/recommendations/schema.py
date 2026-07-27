@@ -2,6 +2,7 @@
 
 from pydantic import BaseModel, Field
 
+
 # 매칭 태그 응답
 class MatchedTagResponse(BaseModel):
     tag_id: int
@@ -26,3 +27,9 @@ class RecommendedWorkResponse(BaseModel):
     )
 
     matched_tags: list[MatchedTagResponse]
+
+# 콘텐츠별 추천 문학작품 목록 응답
+class KContentRecommendationResponse(BaseModel):
+    content_id: int
+    content_title: str
+    recommendations: list[RecommendedWorkResponse]

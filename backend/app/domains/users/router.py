@@ -1,15 +1,26 @@
 ### 회원가입, 로그인, 로그아웃 API
 ### 회원 조회, 회원정보 수정, 회원 탈퇴 API
 
+import app.domains.users.crud as user_crud
+from app.domains.users.model import User
+from app.core.security import (
+    create_access_token,
+    hash_password,
+    verify_password,
+)
+from app.domains.users.dependencies import get_authenticated_user
+from app.database import get_db
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-import crud.user as user_crud
-from database import get_db
-from schemas.user import UserCreate, UserResponse, TokenResponse, UserUpdate, MessageResponse
-from core.security import verify_password, create_access_token, get_authenticated_user, hash_password
-import models
 from fastapi.security import OAuth2PasswordRequestForm
+from app.domains.users.schema import (
+    MessageResponse,
+    TokenResponse,
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     tags=["Users"]
@@ -118,7 +129,7 @@ def login(
 # 현재 로그인한 사용자 정보 조회
 @router.get("/users/me", response_model=UserResponse)
 def read_my_user_info(
-    current_user: models.User = Depends(get_authenticated_user)
+    current_user: User = Depends(get_authenticated_user)
 ):
     return current_user
 
@@ -127,7 +138,7 @@ def read_my_user_info(
 @router.patch("/users/me", response_model=UserResponse)
 def update_current_user(
     user_update: UserUpdate,
-    current_user: models.User = Depends(get_authenticated_user),
+    current_user: User = Depends(get_authenticated_user),
     db: Session = Depends(get_db)
 ):
     update_data = user_update.model_dump(
@@ -170,7 +181,7 @@ def update_current_user(
 # 회원 탈퇴
 @router.delete("/users/me", response_model=MessageResponse)
 def delete_current_user(
-    current_user: models.User = Depends(get_authenticated_user),
+    current_user: User = Depends(get_authenticated_user),
     db: Session = Depends(get_db)
 ):
     user_crud.delete_user(
@@ -184,7 +195,7 @@ def delete_current_user(
 # 로그아웃
 @router.post("/auth/logout", response_model=MessageResponse)
 def logout(
-    current_user: models.User = Depends(get_authenticated_user)
+    current_user: User = Depends(get_authenticated_user)
 ):
     return {
         "message": "로그아웃되었습니다."

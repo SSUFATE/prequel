@@ -1,8 +1,10 @@
 ### Pydantic 모델: API 요청/응답 데이터 정의
 
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from datetime import datetime
 from enum import Enum
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
 
 class Language(str, Enum):
     KO = "ko"
