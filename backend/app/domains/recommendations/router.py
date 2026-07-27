@@ -1,18 +1,11 @@
 ### 콘텐츠 선택 후 추천 문학작품 목록 조회 API
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    Query,
-    status,
-    HTTPException
-)
+import app.domains.kcontents.crud as kcontent_crud
+import app.domains.recommendations.crud as recommendation_crud
+from app.database import get_db
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from app.domains.recommendations.schema import KContentRecommendationResponse
 from sqlalchemy.orm import Session
-
-import crud.user as user_crud
-from database import get_db
-from schemas import KContentRecommendationResponse
-
 
 router = APIRouter(
     prefix="/api/v1/k-contents",
@@ -35,7 +28,7 @@ def get_kcontent_recommendations(
     db: Session = Depends(get_db)
 ):
     # 1. 요청한 K-콘텐츠가 존재하는지 확인
-    content = user_crud.get_kcontent_by_id(
+    content = kcontent_crud.get_kcontent_by_id(
         db=db,
         content_id=content_id
     )
@@ -48,7 +41,7 @@ def get_kcontent_recommendations(
 
     # 2. 작품별 태그 유사도 계산
     recommendations = (
-        user_crud.get_recommendations_by_content_id(
+        recommendation_crud.get_recommendations_by_content_id(
             db=db,
             content_id=content_id,
             limit=limit
