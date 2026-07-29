@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from app.database import Base
-from app.domains.kcontents.model import LiteraryWork
+from app.domains.literatures.model import LiteraryWork
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
