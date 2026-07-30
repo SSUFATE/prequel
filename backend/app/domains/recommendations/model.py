@@ -1,53 +1,76 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, Float, ForeignKey, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import (
+    DateTime, 
+    Float, 
+    ForeignKey, 
+    func,
+)
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
-if TYPE_CHECKING:
-    from app.domains.kcontents.model import KContent
-    from app.domains.literatures.model import LiteraryWork
+
+# if TYPE_CHECKING:
+#     from app.domains.users.model import User
+#     from app.domains.kcontents.model import KContent
+#     from app.domains.literatures.model import LiteraryWork
 
 
 class Recommendation(Base):
-    __tablename__ = "Recommendation"
+    __tablename__ = "recommendations"
 
     recommendation_id: Mapped[int] = mapped_column(
         primary_key=True,
         autoincrement=True,
     )
+
     user_id: Mapped[int] = mapped_column(
         ForeignKey(
-            "User.user_id",
+            "users.user_id",
             ondelete="CASCADE",
-        )
+        ),
+        nullable=False,
+        index=True,
     )
-    kcontent_id: Mapped[int] = mapped_column(
+
+    content_id: Mapped[int] = mapped_column(
         ForeignKey(
-            "KContent.kcontent_id",
+            "kcontents.content_id",
             ondelete="CASCADE",
-        )
+        ),
+        nullable=False,
+        index=True,
     )
+
     work_id: Mapped[int] = mapped_column(
         ForeignKey(
-            "LiteraryWork.work_id",
+            "literatures.work_id",
             ondelete="CASCADE",
-        )
+        ),
+        nullable=False,
+        index=True,
     )
-    similarity_score: Mapped[Optional[float]] = mapped_column(Float)
-    reason: Mapped[Optional[str]] = mapped_column(Text)
+
+    similarity_score: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+    )
+    
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow,
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
     )
 
-    # user: Mapped["user"] = relationship(back_populates="recommendations")
-    kcontent: Mapped["KContent"] = relationship(
-        back_populates="recommendations",
-    )
+    # # 관계 연결
+    # user: Mapped["User"] = relationship(
+    #     back_populates="recommendations"
+    # )
+    # kcontent: Mapped["KContent"] = relationship(
+    #     back_populates="recommendations",
+    # )
 
-    literary_work: Mapped["LiteraryWork"] = relationship(
-        back_populates="recommendations",
-    )
+    # literary_work: Mapped["LiteraryWork"] = relationship(
+    #     back_populates="recommendations",
+    # )

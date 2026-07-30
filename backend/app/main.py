@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+import app.models
+
 from app.domains.kcontents.router import router as kcontent_router
 from app.domains.recommendations.router import router as recommendation_router
 from app.domains.users.router import router as user_router

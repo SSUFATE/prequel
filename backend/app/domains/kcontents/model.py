@@ -1,5 +1,5 @@
-from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from datetime import datetime, date
+from typing import TYPE_CHECKING
 
 from app.database import Base
 from sqlalchemy import (
@@ -16,8 +16,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 if TYPE_CHECKING:
-    from app.domains.recommendations.model import Recommendation
-    from app.domains.tag.model import KContentTag
+    from app.domains.tags.model import KContentTag
 
 
 class KContent(Base):
@@ -32,7 +31,6 @@ class KContent(Base):
     )
 
     content_id: Mapped[int] = mapped_column(
-        Integer,
         primary_key=True,
         index=True
     )
@@ -72,7 +70,7 @@ class KContent(Base):
         nullable=True,
     )
 
-    release_date: Mapped[Date | None] = mapped_column(
+    release_date: Mapped[date | None] = mapped_column(
         Date,
         nullable=True,
     )
@@ -88,24 +86,24 @@ class KContent(Base):
         default="TMDB",
     )
 
-    created_at: Mapped[DateTime] = mapped_column(
-        DateTime,
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
     )
 
-    updated_at: Mapped[DateTime] = mapped_column(
-        DateTime,
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
     )
 
-    # 연관 관계
-    # tags: Mapped[list["KContentTag"]] = relationship(
-    #     back_populates="kcontent",
-    #     cascade="all, delete-orphan",
-    # )
+    # 관계 연결
+    tags: Mapped[list["KContentTag"]] = relationship(
+        back_populates="kcontent",
+        cascade="all, delete-orphan",
+    )
 
     # recommendations: Mapped[list["Recommendation"]] = relationship(
     #     back_populates="kcontent",
