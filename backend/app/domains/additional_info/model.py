@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 from app.database import Base
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
+from app.domains.literatures.model import LiteraryWork
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
