@@ -1,77 +1,85 @@
 ### SQLAlchemy 모델
 ### DB 테이블 정의
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.sql import func
+from datetime import datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Boolean, DateTime, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.database import Base
 
+if TYPE_CHECKING:
+    from app.domains.favorites.model import Favorite
 
 class User(Base):
     __tablename__ = "users"
 
-    user_id = Column(
-        Integer, 
+    user_id: Mapped[int] = mapped_column(
         primary_key=True
     )
 
-    login_id = Column(
+    login_id: Mapped[str] = mapped_column(
         String(50),
         unique=True,
         nullable=False,
         index=True
     )
 
-    password_hash = Column(
+    password_hash: Mapped[str] = mapped_column(
         String(255),
         nullable=False
     )
 
-    username = Column(
+    username: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
     )
 
-    email = Column(
+    email: Mapped[str] = mapped_column(
         String(255),
         unique=True,
         nullable=False,
         index=True
     )
 
-    language = Column(
+    language: Mapped[str] = mapped_column(
         String(10),
-        nullable=False,
         default="ko"
     )
 
-    role = Column(
+    role: Mapped[str] = mapped_column(
         String(20),
-        nullable=False,
         default="USER"
     )
 
-    is_active = Column(
+    is_active: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
         default=True
     )
 
-    is_email_verified = Column(
+    is_email_verified: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
         default=False
     )
 
-    created_at = Column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now()
     )
 
-    updated_at = Column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
         onupdate=func.now()
+    )
+
+    # 관계 연결
+    favorites: Mapped[list["Favorite"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
     )

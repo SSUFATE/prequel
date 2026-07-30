@@ -1,10 +1,9 @@
-
-import app.models_registry  
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import app.models
+
 from app.domains.kcontents.router import router as kcontent_router
-from app.domains.literatures.model import LiteraryWork
 from app.domains.recommendations.router import router as recommendation_router
 from app.domains.users.router import router as user_router
 from app.domains.literatures.router import router as literatures_router

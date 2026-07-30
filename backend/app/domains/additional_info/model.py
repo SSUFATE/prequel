@@ -1,39 +1,107 @@
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from app.database import Base
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
 from app.domains.literatures.model import LiteraryWork
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+if TYPE_CHECKING:
+    from app.domains.literatures.model import LiteraryWork
 
 class Translation(Base):
-    __tablename__ = "Translation"
+    __tablename__ = "translations"
 
-    translation_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    work_id: Mapped[int] = mapped_column(ForeignKey("LiteraryWork.work_id", ondelete="CASCADE"))
-    language: Mapped[str] = mapped_column(String(20), nullable=False)
-    translated_title: Mapped[Optional[str]] = mapped_column(String(255))
-    translator: Mapped[Optional[str]] = mapped_column(String(100))
-    publisher: Mapped[Optional[str]] = mapped_column(String(100))
-    isbn: Mapped[Optional[str]] = mapped_column(String(20))
-    purchase_url: Mapped[Optional[str]] = mapped_column(Text)
-    cover_url: Mapped[Optional[str]] = mapped_column(Text)
-    published_year: Mapped[Optional[int]] = mapped_column(Integer)
+    translation_id: Mapped[int] = mapped_column(
+        primary_key=True,
+    )
 
-    literary_work: Mapped["LiteraryWork"] = relationship(back_populates="translations")
+    work_id: Mapped[int] = mapped_column(
+        ForeignKey(
+            "literatures.work_id", 
+            ondelete="CASCADE"
+        )
+    )
+
+    language: Mapped[str] = mapped_column(
+        String(20), 
+        nullable=False
+    )
+
+    translated_title: Mapped[str | None] = mapped_column(
+        String(255)
+    )
+
+    translator: Mapped[str | None] = mapped_column(
+        String(100)
+    )
+
+    publisher: Mapped[str | None] = mapped_column(
+        String(100)
+    )
+
+    isbn: Mapped[str | None] = mapped_column(
+        String(20)
+    )
+
+    purchase_url: Mapped[str | None] = mapped_column(
+        Text
+    )
+
+    cover_url: Mapped[str | None] = mapped_column(
+        Text
+    )
+
+    published_year: Mapped[int | None] = mapped_column(
+        Integer
+    )
+
+    # 관계 연결
+    literary_work: Mapped["LiteraryWork"] = relationship(
+        back_populates="translations"
+    )
 
 
 class VisualAid(Base):
-    __tablename__ = "VisualAid"
+    __tablename__ = "visual_aids"
 
-    visual_aid_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    work_id: Mapped[int] = mapped_column(ForeignKey("LiteraryWork.work_id", ondelete="CASCADE"))
-    three_line_summary: Mapped[Optional[str]] = mapped_column(Text)
-    taste_preview: Mapped[Optional[str]] = mapped_column(Text)
-    timeline: Mapped[Optional[str]] = mapped_column(Text)
-    relationship_diagram: Mapped[Optional[str]] = mapped_column(Text)
-    key_sentence: Mapped[Optional[str]] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    visual_aid_id: Mapped[int] = mapped_column(
+        primary_key=True, 
+    )
 
-    literary_work: Mapped["LiteraryWork"] = relationship(back_populates="visual_aids")
+    work_id: Mapped[int] = mapped_column(
+        ForeignKey(
+            "literatures.work_id", 
+            ondelete="CASCADE"
+        )
+    )
+    
+    three_line_summary: Mapped[str | None] = mapped_column(
+        Text
+    )
+    
+    taste_preview: Mapped[str | None] = mapped_column(
+        Text
+    )
+    
+    timeline: Mapped[str | None] = mapped_column(
+        Text
+    )
+    
+    relationship_diagram: Mapped[str | None] = mapped_column(
+        Text
+    )
+    
+    key_sentence: Mapped[str | None] = mapped_column(
+        Text
+    )
+    
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        server_default=func.now()
+    )
+
+    # 관계 연결
+    literary_work: Mapped["LiteraryWork"] = relationship(
+        back_populates="visual_aids"
+    )
