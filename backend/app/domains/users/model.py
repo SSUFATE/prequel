@@ -4,8 +4,8 @@
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
+from app.database import Base
 
-Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users"
