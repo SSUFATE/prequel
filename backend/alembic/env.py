@@ -10,8 +10,7 @@ from dotenv import load_dotenv
 from app.database import Base
 
 # 모델 import 시 Base.metadata에 테이블이 등록됨
-from app.domains.users.model import User
-from app.domains.kcontents.model import KContent
+import app.models
 
 load_dotenv()
 
