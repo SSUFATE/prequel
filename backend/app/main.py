@@ -8,6 +8,7 @@ from app.domains.recommendations.router import router as recommendation_router
 from app.domains.users.router import router as user_router
 from app.domains.literatures.router import router as literatures_router
 from app.domains.favorites.router import router as favorite_router
+from app.domains.additional_info.router import router as translation_router
 
 app = FastAPI()
 
@@ -30,3 +31,4 @@ app.include_router(kcontent_router, prefix="/api/v1")
 app.include_router(recommendation_router, prefix="/api/v1")
 app.include_router(literatures_router, prefix="/api/v1")
 app.include_router(favorite_router, prefix="/api/v1")
+app.include_router(translation_router, prefix="/api/v1")
