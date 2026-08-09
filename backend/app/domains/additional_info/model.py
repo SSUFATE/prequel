@@ -24,7 +24,7 @@ class Translation(Base):
     )
 
     language: Mapped[str] = mapped_column(
-        String(20), 
+        String(100), 
         nullable=False
     )
 
@@ -33,11 +33,11 @@ class Translation(Base):
     )
 
     translator: Mapped[str | None] = mapped_column(
-        String(100)
+        String(255)
     )
 
     publisher: Mapped[str | None] = mapped_column(
-        String(100)
+        String(255)
     )
 
     isbn: Mapped[str | None] = mapped_column(
@@ -105,3 +105,18 @@ class VisualAid(Base):
     literary_work: Mapped["LiteraryWork"] = relationship(
         back_populates="visual_aids"
     )
+
+class LtiBibliographyCache(Base):
+    __tablename__ = "lti_bibliography_cache"
+
+    nid: Mapped[str] = mapped_column(String(20), primary_key=True)
+    original_title: Mapped[str | None] = mapped_column(String(255))
+    author_kor: Mapped[str | None] = mapped_column(String(100))
+    author: Mapped[str | None] = mapped_column(String(100))
+    language: Mapped[str | None] = mapped_column(String(50))
+    translator: Mapped[str | None] = mapped_column(String(100))
+    publisher: Mapped[str | None] = mapped_column(String(100))
+    isbn: Mapped[str | None] = mapped_column(String(20))
+    published_year: Mapped[str | None] = mapped_column(String(10))
+    image: Mapped[str | None] = mapped_column(Text)
+    url: Mapped[str | None] = mapped_column(Text)
