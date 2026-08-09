@@ -24,7 +24,7 @@ class Translation(Base):
     )
 
     language: Mapped[str] = mapped_column(
-        String(20), 
+        String(100), 
         nullable=False
     )
 
@@ -33,11 +33,11 @@ class Translation(Base):
     )
 
     translator: Mapped[str | None] = mapped_column(
-        String(100)
+        String(255)
     )
 
     publisher: Mapped[str | None] = mapped_column(
-        String(100)
+        String(255)
     )
 
     isbn: Mapped[str | None] = mapped_column(
