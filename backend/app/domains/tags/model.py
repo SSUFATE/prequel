@@ -20,7 +20,6 @@ class Tag(Base):
 
     name: Mapped[str] = mapped_column(
         String(100), 
-        unique=True, 
         nullable=False
     )
 
@@ -34,6 +33,14 @@ class Tag(Base):
 
     selection_guide: Mapped[str] = mapped_column(
         Text
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "category",
+            "name",
+            name="uq_tags_category_name"
+        ),
     )
 
     # 관계 연결
