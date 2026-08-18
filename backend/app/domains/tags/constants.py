@@ -1,0 +1,9 @@
+from enum import Enum
+
+class TagCategory(str, Enum):
+  ERA_SETTING = "ERA_SETTING"
+  GENRE = "GENRE"
+  SUBJECT = "SUBJECT"
+  MOOD = "MOOD"
+  RELATIONSHIP = "RELATIONSHIP"
+  CULTURAL_CONTEXT = "CULTURAL_CONTEXT"

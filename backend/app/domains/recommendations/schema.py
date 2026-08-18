@@ -1,14 +1,16 @@
 ### Pydantic 모델: API 요청/응답 데이터 정의
 
 from pydantic import BaseModel, Field
+from app.domains.tags.constants import TagCategory
 
 
-# 매칭 태그 응답
+# 공통 태그 응답
 class MatchedTagResponse(BaseModel):
     tag_id: int
     name: str
     content_weight: int
-    work_weight: int
+    literature_weight: int
+
 
 # 추천 문학작품 하나 응답
 class RecommendedWorkResponse(BaseModel):
@@ -28,8 +30,30 @@ class RecommendedWorkResponse(BaseModel):
 
     matched_tags: list[MatchedTagResponse]
 
+
 # 콘텐츠별 추천 문학작품 목록 응답
 class RecommendationListResponse(BaseModel):
     content_id: int
     content_title: str
     recommendations: list[RecommendedWorkResponse]
+
+
+# 문학작품 태그 응답
+class LiteratureTagResponse(BaseModel):
+    tag_id: int
+    name: str
+    category: TagCategory
+    literature_weight: int
+    is_matched: bool
+
+
+# 문학작품 상세 응답
+class RecommendationDetailResponse(BaseModel):
+    content_id: int
+    work_id: int
+    similarity_score: float = Field(
+        ge=0,
+        le=1
+    )
+    category_scores: dict[str, float]
+    literature_tags: list[LiteratureTagResponse]
