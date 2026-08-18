@@ -18,3 +18,4 @@ class LiteraryWorkRepository:
         self.db.commit()
         self.db.refresh(work)
         return work
+    
