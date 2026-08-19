@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   colors,
   inputStyle,
@@ -9,22 +10,28 @@ import {
   labelStyle,
   submitButtonStyle,
 } from "@/app/lib/authStyles";
+import { ApiError, login as loginRequest } from "@/app/lib/api";
+import { useAuth } from "@/app/lib/authContext";
 
 type LoginError =
   | null
   | "ID_REQUIRED"
   | "PASSWORD_REQUIRED"
   | "MISMATCH"
+  | "INACTIVE"
   | "SERVER_ERROR";
 
 const ERROR_MESSAGE: Record<Exclude<LoginError, null>, string> = {
   ID_REQUIRED: "아이디를 입력해주세요.",
   PASSWORD_REQUIRED: "비밀번호를 입력해주세요.",
   MISMATCH: "아이디 또는 비밀번호가 일치하지 않습니다.",
+  INACTIVE: "비활성화된 사용자입니다.",
   SERVER_ERROR: "로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
 };
 
 export default function LoginPage() {
+  const router = useRouter();
+  const auth = useAuth();
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<LoginError>(null);
@@ -48,12 +55,21 @@ export default function LoginPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      // TODO: 실제 로그인 API 연동
-      // const res = await fetch("/api/auth/login", { method: "POST", body: JSON.stringify({ id, password }) });
-      // if (res.status === 401) { setError("MISMATCH"); return; }
-      // if (!res.ok) { setError("SERVER_ERROR"); return; }
-    } catch {
-      setError("SERVER_ERROR");
+      const { access_token } = await loginRequest(id.trim(), password);
+      auth.login(access_token);
+      router.push("/");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.status === 401) {
+          setError("MISMATCH");
+        } else if (err.status === 403) {
+          setError("INACTIVE");
+        } else {
+          setError("SERVER_ERROR");
+        }
+      } else {
+        setError("SERVER_ERROR");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -138,7 +154,7 @@ export default function LoginPage() {
             style={{ ...submitButtonStyle(true), marginTop: 18 }}
             disabled={isSubmitting}
           >
-            로그인
+            {isSubmitting ? "로그인 중..." : "로그인"}
           </button>
         </form>
 

@@ -71,22 +71,6 @@ export default function LiteratureDetailPage({
 
   return (
     <div className="detail-page">
-      <header className="detail-header">
-        <Link href="/" className="detail-logo">
-          Prequel
-        </Link>
-        <nav className="detail-nav">
-          <button type="button" className="detail-nav-link">
-            로그아웃
-          </button>
-          <Link href="/favorite" className="detail-nav-link">
-            찜
-          </Link>
-          <button type="button" className="detail-icon-button" aria-label="마이페이지">
-            <UserIcon />
-          </button>
-        </nav>
-      </header>
 
       <div className="detail-body">
         <button
