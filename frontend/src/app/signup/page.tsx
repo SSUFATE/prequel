@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   colors,
   inputStyle,
@@ -9,10 +10,7 @@ import {
   labelStyle,
   submitButtonStyle,
 } from "@/app/lib/authStyles";
-
-// TODO: 백엔드 붙이면 이 목록/판정 로직을 실제 API 호출로 교체
-const TAKEN_IDS = ["admin", "test", "prequel"];
-const TAKEN_EMAILS = ["taken@example.com"];
+import { ApiError, signup } from "@/app/lib/api";
 
 const LANGUAGES = [
   { value: "", label: "선호 언어 선택" },
@@ -25,6 +23,8 @@ const LANGUAGES = [
 type FieldState = "default" | "error" | "success";
 
 export default function SignupPage() {
+  const router = useRouter();
+
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -32,18 +32,28 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [preferredLanguage, setPreferredLanguage] = useState("");
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
+
+
+  const [idTakenByServer, setIdTakenByServer] = useState(false);
+  const [emailTakenByServer, setEmailTakenByServer] = useState(false);
+
+  const idFormatValid = id.length >= 4; 
   const idState: FieldState = useMemo(() => {
+    if (idTakenByServer) return "error";
     if (!touched.id || id.length === 0) return "default";
-    return TAKEN_IDS.includes(id) ? "error" : "success";
-  }, [id, touched.id]);
+    return idFormatValid ? "success" : "error";
+  }, [id, touched.id, idFormatValid, idTakenByServer]);
 
   const idMessage = useMemo(() => {
+    if (idTakenByServer) return "이미 사용 중인 아이디입니다.";
     if (!touched.id || id.length === 0) return null;
-    return idState === "error" ? "이미 사용 중인 아이디입니다." : "사용 가능한 아이디입니다.";
-  }, [idState, touched.id, id]);
+    return idFormatValid ? "사용 가능한 아이디입니다." : "아이디는 4자 이상이어야 합니다.";
+  }, [idFormatValid, idTakenByServer, touched.id, id]);
 
-  const passwordValid = password.length >= 8;
+  const passwordValid = password.length >= 8; 
   const passwordState: FieldState = useMemo(() => {
     if (!touched.password || password.length === 0) return "default";
     return passwordValid ? "success" : "error";
@@ -66,17 +76,16 @@ export default function SignupPage() {
 
   const emailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const emailState: FieldState = useMemo(() => {
+    if (emailTakenByServer) return "error";
     if (!touched.email || email.length === 0) return "default";
-    if (!emailFormatValid) return "error";
-    return TAKEN_EMAILS.includes(email) ? "error" : "success";
-  }, [email, emailFormatValid, touched.email]);
+    return emailFormatValid ? "success" : "error";
+  }, [email, emailFormatValid, touched.email, emailTakenByServer]);
 
   const emailMessage = useMemo(() => {
+    if (emailTakenByServer) return "이미 가입된 이메일입니다.";
     if (!touched.email || email.length === 0) return null;
-    if (!emailFormatValid) return "올바른 이메일 형식을 입력해주세요.";
-    if (TAKEN_EMAILS.includes(email)) return "이미 사용 중인 이메일입니다.";
-    return "사용 가능한 이메일입니다.";
-  }, [email, emailFormatValid, touched.email]);
+    return emailFormatValid ? "사용 가능한 이메일입니다." : "올바른 이메일 형식을 입력해주세요.";
+  }, [email, emailFormatValid, touched.email, emailTakenByServer]);
 
   const isFormValid =
     idState === "success" &&
@@ -91,33 +100,44 @@ export default function SignupPage() {
     setTouched((prev) => ({ ...prev, [field]: true }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isFormValid) return;
-    // TODO: 회원가입 API 연동
+    if (!isFormValid || isSubmitting) return;
+
+    setSubmitError(null);
+    setIsSubmitting(true);
+    try {
+      await signup({
+        login_id: id,
+        password,
+        username: username.trim(),
+        email,
+        language: preferredLanguage,
+      });
+      router.push("/login");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        if (err.message.includes("아이디")) {
+          setIdTakenByServer(true);
+          markTouched("id");
+        } else if (err.message.includes("이메일")) {
+          setEmailTakenByServer(true);
+          markTouched("email");
+        } else {
+          setSubmitError(err.message);
+        }
+      } else if (err instanceof ApiError) {
+        setSubmitError(err.message);
+      } else {
+        setSubmitError("회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <div style={{ minHeight: "100vh", background: "#FFFFFF" }}>
-      <header
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "20px 32px",
-          borderBottom: `1px solid ${colors.border}`,
-        }}
-      >
-        <span style={{ fontSize: 20, fontWeight: 700, color: colors.textPrimary }}>Prequel</span>
-        <nav style={{ display: "flex", gap: 20, fontSize: 14 }}>
-          <Link href="/signup" style={{ color: colors.textPrimary, fontWeight: 600 }}>
-            회원가입
-          </Link>
-          <Link href="/login" style={{ color: colors.textSecondary }}>
-            로그인
-          </Link>
-        </nav>
-      </header>
 
       <main
         style={{
@@ -145,7 +165,10 @@ export default function SignupPage() {
               style={inputStyle(idState)}
               placeholder="아이디"
               value={id}
-              onChange={(e) => setId(e.target.value)}
+              onChange={(e) => {
+                setId(e.target.value);
+                if (idTakenByServer) setIdTakenByServer(false);
+              }}
               onBlur={() => markTouched("id")}
             />
             {idMessage && <p style={helperTextStyle(idState)}>{idMessage}</p>}
@@ -209,7 +232,10 @@ export default function SignupPage() {
               style={inputStyle(emailState)}
               placeholder="example@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailTakenByServer) setEmailTakenByServer(false);
+              }}
               onBlur={() => markTouched("email")}
             />
             {emailMessage && <p style={helperTextStyle(emailState)}>{emailMessage}</p>}
@@ -234,8 +260,14 @@ export default function SignupPage() {
             </select>
           </div>
 
-          <button type="submit" style={submitButtonStyle(isFormValid)} disabled={!isFormValid}>
-            회원가입
+          {submitError && <p style={{ ...helperTextStyle("error"), marginBottom: 16 }}>{submitError}</p>}
+
+          <button
+            type="submit"
+            style={submitButtonStyle(isFormValid && !isSubmitting)}
+            disabled={!isFormValid || isSubmitting}
+          >
+            {isSubmitting ? "가입 처리 중..." : "회원가입"}
           </button>
         </form>
 

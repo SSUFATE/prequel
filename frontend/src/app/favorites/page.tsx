@@ -29,7 +29,7 @@ export default function favoritePage() {
 
   return (
     <div className="favorite-page">
-      <header className="favorite-header">
+      {/* <header className="favorite-header">
         <Link href="/" className="favorite-logo">
           Prequel
         </Link>
@@ -45,7 +45,7 @@ export default function favoritePage() {
             <UserIcon />
           </button>
         </nav>
-      </header>
+      </header> */}
 
       <main className="favorite-main">
         <h1 className="favorite-title">찜</h1>
