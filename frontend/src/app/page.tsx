@@ -1,59 +1,47 @@
 import Link from "next/link";
-
-const popularContents = Array.from({ length: 7 });
+import SearchBar from "@/components/SearchBar";
+import ContentCard from "@/components/ContentCard";
+import { popularContents } from "@/data/mockContents";
 
 export default function Home() {
   return (
     <main className="home">
-      <section className="hero">
-        <p className="hero-label">Prequel</p>
+      <section className="hero-section">
+        <div className="hero-content">
+          <p className="hero-label">Prequel</p>
 
-        <h1 className="hero-title">
-          좋아했던 K-콘텐츠와 닮은 한국 문학을 만나보세요.
-          <br />
-          재미있게 본 영화나 드라마를 검색해보세요.
-        </h1>
+          <h1>
+            좋아했던 K-콘텐츠와 닮은
+            <br className="mobile-hide" />
+            한국 문학을 만나보세요.
+          </h1>
 
-        <form className="search-form">
-          <input
-            type="search"
-            placeholder="당신이 재미있게 본 K-콘텐츠를 검색해보세요!"
-            aria-label="K-콘텐츠 검색"
-          />
+          <p className="hero-description">
+            재미있게 본 영화나 드라마를 검색하면
+            <br className="mobile-hide" />
+            비슷한 분위기와 주제를 가진 한국 문학을 추천해드려요.
+          </p>
 
-          <button type="submit" aria-label="검색">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M11 19A8 8 0 1 0 11 3a8 8 0 0 0 0 16ZM21 21l-4.35-4.35"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </form>
+          <SearchBar />
+        </div>
       </section>
 
       <section className="popular-section">
         <div className="section-heading">
           <h2>지금 많이 찾는 K 콘텐츠</h2>
 
-          <Link href="/search" className="more-link" aria-label="더 보기">
-            ›
+          <Link href="/search" className="more-link">
+            더 보기
+            <span>›</span>
           </Link>
         </div>
 
-        <div className="content-list">
-          {popularContents.map((_, index) => (
-            <div className="content-card" key={index}>
-              <div className="poster-placeholder" />
-            </div>
+        <div className="content-grid">
+          {popularContents.map((content) => (
+            <ContentCard
+              key={content.id}
+              title={content.title}
+            />
           ))}
         </div>
       </section>
