@@ -23,7 +23,7 @@ def get_kcontents(
     # 콘텐츠 종류 필터
     if content_type:
         query = query.filter(
-            KContent.content_type.ilike(f"%{content_type}%")
+            KContent.content_type == content_type.value
         )
 
     # 조건에 맞는 전체 콘텐츠 개수

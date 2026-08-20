@@ -61,7 +61,7 @@ def get_kcontent_recommendations(
 
 # 특정 콘텐츠 + 문학작품 상세 조회
 @router.get(
-    "/{contend_id}/recommendations/{work_id}",
+    "/{content_id}/recommendations/{work_id}",
     response_model=RecommendationDetailResponse,
     status_code=status.HTTP_200_OK
 )
