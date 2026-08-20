@@ -1,9 +1,14 @@
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import ContentCard from "@/components/ContentCard";
-import { popularContents } from "@/data/mockContents";
+import { getKContents } from "@/api/kcontents";
 
-export default function Home() {
+export default async function Home() {
+  const { items: contents } = await getKContents({
+    page: 1,
+    size: 6,
+  });
+
   return (
     <main className="home">
       <section className="hero-section">
@@ -37,10 +42,11 @@ export default function Home() {
         </div>
 
         <div className="content-grid">
-          {popularContents.map((content) => (
+          {contents.map((content) => (
             <ContentCard
-              key={content.id}
+              key={content.content_id}
               title={content.title}
+              image={content.poster_url ?? undefined}
             />
           ))}
         </div>

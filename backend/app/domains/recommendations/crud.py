@@ -107,6 +107,7 @@ def get_matched_tags(
             LiteraryWorkTag.work_id,
             Tag.tag_id,
             Tag.name,
+            Tag.category,
             KContentTag.weight.label("content_weight"),
             LiteraryWorkTag.weight.label("literature_weight"),
         ).

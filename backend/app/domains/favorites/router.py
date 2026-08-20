@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.security import get_current_user
 from app.domains.favorites.service import FavoriteService
 from app.domains.favorites.schema import FavoriteWorkResponse
 from app.domains.users.model import User
-from fastapi import status
 from app.domains.favorites.schema import FavoriteResponse
 
 router = APIRouter(prefix="/favorites", tags=["favorites"])

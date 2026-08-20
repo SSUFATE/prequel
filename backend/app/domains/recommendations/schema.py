@@ -8,6 +8,7 @@ from app.domains.tags.constants import TagCategory
 class MatchedTagResponse(BaseModel):
     tag_id: int
     name: str
+    category: TagCategory
     content_weight: int
     literature_weight: int
 

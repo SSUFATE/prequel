@@ -1,31 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 
 import "./recommendations.css";
 
-type Theme =
-  | "ALL"
-  | "ERA_SETTING"
-  | "GENRE"
-  | "SUBJECT"
-  | "EMOTIONAL"
-  | "RELATIONSHIP"
-  | "CULTURAL_CONTEXT";
+import { getKContentById } from "@/api/kcontents";
+import { getRecommendations } from "@/api/recommendations";
 
-type Recommendation = {
-  workId: number;
-  title: string;
-  author: string;
-  literaryType: string;
-  publicationYear?: number;
-  poster?: string;
-  similarityScore: number;
-  categoryScores: Partial<Record<Exclude<Theme, "ALL">, number>>;
-  tags: string[];
-  description?: string;
-};
+import type { KContent } from "@/types/kcontent"
+import type {
+  Recommendation,
+  TagCategory,
+} from "@/types/recommendation";
+
+type Theme = "ALL" | TagCategory;
 
 const themes: {
   key: Theme;
@@ -61,91 +50,21 @@ const themes: {
   },
 ];
 
-/* API 연결 전 임시 콘텐츠 */
-const selectedContent = {
-  id: 1,
-  title: "미스터 션샤인",
-  type: "드라마",
-  genre: "시대극",
-  platform: "Netflix",
-  poster: "/images/mr-sunshine.jpg",
-};
-
-/* API 연결 전 임시 추천 목록 */
-const recommendations: Recommendation[] = [
-  {
-    workId: 1,
-    title: "토지",
-    author: "박경리",
-    literaryType: "장편소설",
-    publicationYear: 1969,
-    poster: "/images/toji.jpg",
-    similarityScore: 0.74,
-
-    categoryScores: {
-      ERA_SETTING: 0.82,
-      GENRE: 0.55,
-      SUBJECT: 0.78,
-      EMOTIONAL: 0.68,
-      RELATIONSHIP: 0.62,
-      CULTURAL_CONTEXT: 0.81,
-    },
-
-    tags: ["일제강점기", "공동체", "역사", "가족"],
-
-    description:
-      "격변하는 시대 속에서 개인과 공동체가 살아가는 모습을 함께 담고 있어요.",
-  },
-
-  {
-    workId: 2,
-    title: "태백산맥",
-    author: "조정래",
-    literaryType: "장편소설",
-    publicationYear: 1983,
-    similarityScore: 0.68,
-
-    categoryScores: {
-      ERA_SETTING: 0.88,
-      GENRE: 0.58,
-      SUBJECT: 0.72,
-      EMOTIONAL: 0.6,
-      RELATIONSHIP: 0.54,
-      CULTURAL_CONTEXT: 0.77,
-    },
-
-    tags: ["역사", "이념갈등", "공동체"],
-
-    description:
-      "한국 근현대사의 갈등을 중심으로 인물과 사회의 관계를 깊게 다뤄요.",
-  },
-
-  {
-    workId: 3,
-    title: "무정",
-    author: "이광수",
-    literaryType: "장편소설",
-    publicationYear: 1917,
-    similarityScore: 0.61,
-
-    categoryScores: {
-      ERA_SETTING: 0.72,
-      GENRE: 0.42,
-      SUBJECT: 0.58,
-      EMOTIONAL: 0.64,
-      RELATIONSHIP: 0.71,
-      CULTURAL_CONTEXT: 0.52,
-    },
-
-    tags: ["근대", "사랑", "갈등"],
-
-    description:
-      "근대 사회의 변화 속에서 사랑과 가치관의 충돌을 그린 작품이에요.",
-  },
-];
 
 export default function RecommendationPage() {
   const router = useRouter();
+
+  const params = useParams<{
+    contentId: string;
+  }>();
+
+  const contentId = Number(params.contentId);
+
+  const [selectedContent, setSelectedContent] = 
+    useState<KContent | null>(null);
+
+  const [recommendations, setRecommendations] = 
+    useState<Recommendation[]>([]);
 
   const [selectedTheme, setSelectedTheme] =
     useState<Theme>("ALL");
@@ -153,39 +72,83 @@ export default function RecommendationPage() {
   const [sortOrder, setSortOrder] =
     useState<"similarity" | "title">("similarity");
 
-  const filteredRecommendations = useMemo(() => {
-    let result = [...recommendations];
+  const [isContentLoading, setIsContentLoading] = 
+    useState(true);
 
-    /*
-      전체가 아니라 테마 선택 시
-      해당 테마 점수가 있는 추천만 보여줌
+  const [isRecommendationsLoading, setIsRecommendationsLoading] =
+    useState(true);
 
-      추후 백엔드에서 테마별 추천 목록을
-      따로 받아오면 이 부분은 API 호출로 교체 가능
-    */
-    if (selectedTheme !== "ALL") {
-      result = result.filter(
-        (item) =>
-          (item.categoryScores[selectedTheme] ?? 0) > 0
-      );
+  const [error, setError] = useState<string | null>(null);
 
-      result.sort(
-        (a, b) =>
-          (b.categoryScores[selectedTheme] ?? 0) -
-          (a.categoryScores[selectedTheme] ?? 0)
-      );
+  // 선택한 K콘텐츠 조회
+  useEffect(() => {
+    if (!Number.isFinite(contentId)) return;
+
+    const fetchContent = async () => {
+      try {
+        setIsContentLoading(true);
+        setError(null);
+
+        const data = await getKContentById(contentId);
+
+        setSelectedContent(data);
+      } catch (error) {
+        console.error("K콘텐츠 조회 실패:", error);
+
+        setError("K콘텐츠 정보를 불러오지 못했어요.");
+      } finally {
+        setIsContentLoading(false);
+      }
     }
 
-    if (
-      selectedTheme === "ALL" &&
-      sortOrder === "similarity"
-    ) {
-      result.sort(
-        (a, b) =>
-          b.similarityScore -
-          a.similarityScore
-      );
-    }
+    fetchContent();
+  }, [contentId]);
+
+  // 전체 / 테마별 추천 문학 목록 조회
+  useEffect(() => {
+    if (!Number.isFinite(contentId)) return;
+
+    const fetchRecommendations = async() => {
+      try {
+        setIsRecommendationsLoading(true);
+        setError(null);
+
+        const data = await getRecommendations(
+          contentId,
+          {
+            limit: 20,
+            category:
+              selectedTheme === "ALL"
+                ? undefined
+                : selectedTheme,
+          }
+        );
+
+        console.log("추천 API 응답:", data);
+        console.log(
+          "recommendations 배열?",
+          Array.isArray(data.recommendations)
+        );
+
+        setRecommendations(data.recommendations);
+      } catch (error) {
+        console.error("추천 목록 조회 실패:", error);
+
+        setRecommendations([]);
+
+        setError("추천 작품을 불러오지 못했어요.");
+      } finally {
+        setIsRecommendationsLoading(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, [contentId, selectedTheme]);
+
+  // 백엔드 api에서 기본 유사도 정렬을 함
+  // 제목 순을 선택했을 때만 프론트에서 정렬
+  const sortedRecommendations = useMemo(() => {
+    const result = [...recommendations];
 
     if (sortOrder === "title") {
       result.sort((a, b) =>
@@ -193,13 +156,40 @@ export default function RecommendationPage() {
       );
     }
 
-    return result;
-  }, [selectedTheme, sortOrder]);
+    if (sortOrder === "similarity") {
+      result.sort((a, b) => 
+        b.similarity_score -
+        a.similarity_score
+      )
+    }
 
-  const selectedThemeLabel =
+    return result;
+  }, [recommendations, sortOrder]);
+
+  const selectedThemeLabel = 
     themes.find(
       (theme) => theme.key === selectedTheme
     )?.label ?? "전체";
+
+  if (isContentLoading) {
+    return (
+      <main className="recommendation-page">
+        <div className="recommendation-inner">
+          <p>콘텐츠 정보를 불러오는 중...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!selectedContent) {
+    return (
+      <main className="recommendation-page">
+        <div className="recommendation-inner">
+          <p>콘텐츠 정보를 찾을 수 없어요.</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="recommendation-page">
@@ -218,9 +208,9 @@ export default function RecommendationPage() {
         {/* 선택한 K 콘텐츠 */}
         <section className="selected-content">
           <div className="selected-content-poster">
-            {selectedContent.poster ? (
+            {selectedContent.poster_url ? (
               <img
-                src={selectedContent.poster}
+                src={selectedContent.poster_url}
                 alt={`${selectedContent.title} 포스터`}
               />
             ) : (
@@ -236,14 +226,18 @@ export default function RecommendationPage() {
             <h1>{selectedContent.title}</h1>
 
             <p>
-              {selectedContent.type}
-              <span>·</span>
-              {selectedContent.genre}
+              {selectedContent.content_type ===
+              "MOVIE"
+                ? "영화"
+                : "드라마"
+              }
 
-              {selectedContent.platform && (
+              {selectedContent.release_date && (
                 <>
                   <span>·</span>
-                  {selectedContent.platform}
+                  {new Date(
+                    selectedContent.release_date
+                  ).getFullYear()}
                 </>
               )}
             </p>
@@ -325,31 +319,31 @@ export default function RecommendationPage() {
         )}
 
         {/* 추천 목록 */}
-        {filteredRecommendations.length > 0 ? (
+        {isRecommendationsLoading ? (
+          <section className="recommendation-empty">
+            <p>추천 작품을 불러오는 중...</p>
+          </section>
+        ) : error ? (
+          <section className="recommendation-empty">
+            <p>{error}</p>
+          </section>
+        ) : sortedRecommendations.length > 0 ?(
           <section className="recommendation-list">
-            {filteredRecommendations.map(
-              (item) => {
-                const score =
-                  selectedTheme === "ALL"
-                    ? item.similarityScore
-                    : item.categoryScores[
-                        selectedTheme
-                      ] ?? 0;
-
-                return (
-                  <article
-                    key={item.workId}
-                    className="recommendation-card"
-                    onClick={() =>
-                      router.push(
-                        `/literatures/${item.workId}`
-                      )
-                    }
-                  >
-                    <div className="literature-poster">
-                      {item.poster ? (
+            {sortedRecommendations.map(
+              (item) => (
+                <article
+                  key={item.work_id}
+                  className="recommendation-card"
+                  onClick={() =>
+                    router.push(
+                      `/literatures/${item.work_id}`
+                    )
+                  }
+                >
+                  <div className="literature-poster">
+                      {item.cover_url ? (
                         <img
-                          src={item.poster}
+                          src={item.cover_url}
                           alt={`${item.title} 표지`}
                         />
                       ) : (
@@ -366,36 +360,48 @@ export default function RecommendationPage() {
 
                           <p className="literature-meta">
                             {item.author}
-                            <span>·</span>
-                            {item.literaryType}
 
-                            {item.publicationYear && (
+                            {item.genre && (
                               <>
                                 <span>·</span>
-                                {item.publicationYear}
+                                {item.genre}
+                              </>
+                            )}
+
+                            {item.published_year && (
+                              <>
+                                <span>·</span>
+                                {item.published_year}
                               </>
                             )}
                           </p>
                         </div>
 
                         <span className="similarity-badge">
-                          {Math.round(score * 100)}%
-                          유사
+                          {Math.round(
+                            item.similarity_score * 
+                            100
+                          )}
+                          % 유사
                         </span>
                       </div>
 
-                      {item.description && (
+                      {item.summary && (
                         <p className="recommendation-reason">
-                          {item.description}
+                          {item.summary}
                         </p>
                       )}
 
                       <div className="literature-tags">
-                        {item.tags.map((tag) => (
-                          <span key={tag}>
-                            # {tag}
-                          </span>
-                        ))}
+                        {item.matched_tags.map(
+                          (tag) => (
+                            <span 
+                              key={tag.tag_id}
+                            >
+                              # {tag.name}
+                            </span>
+                          )
+                        )}
                       </div>
                     </div>
 
@@ -408,15 +414,14 @@ export default function RecommendationPage() {
 
                         console.log(
                           "찜:",
-                          item.workId
+                          item.work_id
                         );
                       }}
                     >
                       ♡
                     </button>
                   </article>
-                );
-              }
+              )
             )}
           </section>
         ) : (

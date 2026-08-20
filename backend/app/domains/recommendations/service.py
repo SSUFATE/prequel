@@ -75,6 +75,7 @@ def get_recommendations_by_content_id(
             {
                 "tag_id": row.tag_id,
                 "name": row.name,
+                "category": row.category,
                 "content_weight": row.content_weight,
                 "literature_weight": row.literature_weight
             }

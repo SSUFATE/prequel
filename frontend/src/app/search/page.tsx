@@ -4,63 +4,14 @@ import "./search.css";
 import {
   FormEvent,
   useEffect,
-  useMemo,
   useState,
 } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getKContents } from "@/api/kcontents";
+import type { KContent } from "@/types/kcontent";
 
 const STORAGE_KEY = "prequel_recent_searches";
-
-type Content = {
-  id: number;
-  title: string;
-  type: "영화" | "드라마";
-  genre: string;
-  platform?: string;
-  poster?: string;
-};
-
-const mockContents: Content[] = [
-  {
-    id: 1,
-    title: "미스터 션샤인",
-    type: "드라마",
-    genre: "시대극",
-    platform: "Netflix",
-    poster: "/images/mr-sunshine.jpg",
-  },
-  {
-    id: 2,
-    title: "미스터 고",
-    type: "영화",
-    genre: "코미디",
-  },
-  {
-    id: 3,
-    title: "미스터 주",
-    type: "영화",
-    genre: "코미디",
-  },
-  {
-    id: 4,
-    title: "미스터 기간제",
-    type: "드라마",
-    genre: "스릴러",
-  },
-  {
-    id: 5,
-    title: "1987",
-    type: "영화",
-    genre: "드라마",
-  },
-  {
-    id: 6,
-    title: "극한직업",
-    type: "영화",
-    genre: "코미디",
-  },
-];
 
 export default function SearchPage() {
   const router = useRouter();
@@ -71,6 +22,11 @@ export default function SearchPage() {
 
   const [recentSearches, setRecentSearches] =
     useState<string[]>([]);
+
+  const [searchResults, setSearchResults] = useState<KContent[]>([]);
+  const [total, setTotal] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -104,7 +60,34 @@ export default function SearchPage() {
     updateRecentSearches(updated);
   };
 
-  const handleSearch = (
+  const searchContents = async (
+    value: string
+  ) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const data = await getKContents({
+        search: value,
+        page: 1,
+        size: 20,
+      });
+
+      setSearchResults(data.items);
+      setTotal(data.total);
+      setSearchedKeyword(value);
+    } catch (error) {
+      console.error("K-콘텐츠 검색 실패:", error);
+
+      setSearchResults([]);
+      setTotal(0);
+      setError("검색 중 오류가 발생했어요.");
+    } finally{
+      setIsLoading(false);
+    }
+  }
+
+  const handleSearch = async(
     event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
@@ -115,15 +98,17 @@ export default function SearchPage() {
 
     addRecentSearch(value);
 
-    setSearchedKeyword(value);
+    await searchContents(value);
   };
 
-  const handleRecentSearch = (value: string) => {
+  const handleRecentSearch = async (
+    value: string
+  ) => {
     setKeyword(value);
 
     addRecentSearch(value);
 
-    setSearchedKeyword(value);
+    await searchContents(value);
   };
 
   const handleDelete = (target: string) => {
@@ -137,22 +122,10 @@ export default function SearchPage() {
   const handleClearKeyword = () => {
     setKeyword("");
     setSearchedKeyword("");
+    setSearchResults([]);
+    setTotal(0);
+    setError(null);
   };
-
-  const searchResults = useMemo(() => {
-    if (!searchedKeyword) {
-      return [];
-    }
-
-    const normalizedKeyword =
-      searchedKeyword.toLowerCase();
-
-    return mockContents.filter((content) =>
-      content.title
-        .toLowerCase()
-        .includes(normalizedKeyword)
-    );
-  }, [searchedKeyword]);
 
   const hasSearched = searchedKeyword !== "";
 
@@ -279,14 +252,14 @@ export default function SearchPage() {
             <div className="search-result-grid">
               {searchResults.map((content) => (
                 <Link
-                  key={content.id}
-                  href={`/k-contents/${content.id}/recommendations`}
+                  key={content.content_id}
+                  href={`/k-contents/${content.content_id}/recommendations`}
                   className="search-result-card"
                 >
                   <div className="search-result-poster">
-                    {content.poster ? (
+                    {content.poster_url ? (
                       <img
-                        src={content.poster}
+                        src={content.poster_url}
                         alt={`${content.title} 포스터`}
                       />
                     ) : (
@@ -300,9 +273,22 @@ export default function SearchPage() {
                     <h3>{content.title}</h3>
 
                     <p>
-                      <span>{content.type}</span>
-                      <span className="separator">·</span>
-                      <span>{content.genre}</span>
+                      <span>{content.content_type === 
+                      "MOVIE"
+                        ? "영화"
+                        : "드라마"}
+                      </span>
+                      
+                      {content.release_date && (
+                        <>
+                          <span className="separator">·</span>
+                          <span>
+                            {new Date(
+                              content.release_date
+                            ).getFullYear()}
+                          </span>
+                        </>
+                      )}
 
                       {content.platform && (
                         <>
