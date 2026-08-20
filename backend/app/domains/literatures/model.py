@@ -9,7 +9,6 @@ from app.database import Base
 
 if TYPE_CHECKING:
     from app.domains.additional_info.model import Translation, VisualAid
-    # from app.domains.recommendations.model import Recommendation
     from app.domains.favorites.model import Favorite
     from app.domains.tags.model import LiteraryWorkTag
 
@@ -69,7 +68,6 @@ class LiteraryWork(Base):
         server_default=func.now(),
     )
 
-    # 1:N 관계
     tags: Mapped[list["LiteraryWorkTag"]] = relationship(
         back_populates="literary_work",
         cascade="all, delete-orphan",
@@ -79,11 +77,6 @@ class LiteraryWork(Base):
         back_populates="literary_work",
         cascade="all, delete-orphan",
     )
-
-    # recommendations: Mapped[list["Recommendation"]] = relationship(
-    #     back_populates="literary_work",
-    #     cascade="all, delete-orphan",
-    # )
 
     translations: Mapped[list["Translation"]] = relationship(
         back_populates="literary_work",

@@ -11,22 +11,6 @@ class LiteraryWorkService:
         self.client = LibraryApiClient()
         self.repository = LiteraryWorkRepository(db)
 
-    def get_or_fetch(self, isbn13: str) -> LiteraryWork:
-        raw = self.client.fetch_book_detail(isbn13)
-        work = convert_to_literary_work(raw)
-
-        existing = self.repository.find_by_title_author(work.title, work.author)
-        if existing:
-            return existing
-
-        return self.repository.save(work)
-
-
-class LiteraryWorkService:
-    def __init__(self, db: Session):
-        self.client = LibraryApiClient()
-        self.repository = LiteraryWorkRepository(db)
-
     def bulk_fetch_and_save(self, total_pages: int, start_dt: str, end_dt: str):
         saved_count = 0
 
@@ -35,7 +19,7 @@ class LiteraryWorkService:
             books = raw.get("response", {}).get("docs", [])
 
             if not books:
-                break  # 더 이상 데이터 없으면 중단
+                break  
 
             for item in books:
                 book = item.get("doc")
@@ -49,7 +33,7 @@ class LiteraryWorkService:
                     self.repository.save(work)
                     saved_count += 1
 
-            time.sleep(0.2)  # API 과호출 방지
+            time.sleep(0.2)  
 
         return saved_count
 
@@ -57,7 +41,7 @@ class LiteraryWorkService:
         return LiteraryWork(
             title=book.get("bookname"),
             author=book.get("authors"),
-            summary=None,  # srchBooks는 책소개 안 줌 → 상세조회 별도 필요
+            summary=None,  # 상세조회 별도 필요
             genre=book.get("class_nm"),
             published_year=self._parse_year(book.get("publication_year")),
             cover_url=book.get("bookImageURL"),
@@ -71,7 +55,7 @@ class LiteraryWorkService:
             return int(value[:4])
         except (ValueError, TypeError):
             return None
-        
+
     def get_or_fetch(self, isbn13: str) -> LiteraryWork:
         raw = self.client.fetch_book_detail(isbn13)
         work = convert_to_literary_work(raw)
@@ -81,3 +65,20 @@ class LiteraryWorkService:
             return existing
 
         return self.repository.save(work)
+
+    def get_list(
+        self, page: int = 1, size: int = 20, keyword: str | None = None
+    ) -> tuple[list[LiteraryWork], int]:
+        skip = (page - 1) * size
+
+        if keyword:
+            items = self.repository.search(keyword, skip=skip, limit=size)
+            total = self.repository.count_search(keyword)
+        else:
+            items = self.repository.find_all(skip=skip, limit=size)
+            total = self.repository.count_all()
+
+        return items, total
+
+    def get_detail(self, work_id: int) -> LiteraryWork | None:
+        return self.repository.find_by_id(work_id)
