@@ -37,7 +37,7 @@ const themes: {
     label: "소재·주제",
   },
   {
-    key: "EMOTIONAL",
+    key: "MOOD",
     label: "정서",
   },
   {

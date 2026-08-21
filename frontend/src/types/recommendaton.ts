@@ -3,7 +3,6 @@ export type TagCategory =
   | "GENRE"
   | "SUBJECT"
   | "MOOD"
-  | "EMOTIONAL"
   | "RELATIONSHIP"
   | "CULTURAL_CONTEXT"
 
