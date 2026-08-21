@@ -1,50 +1,87 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./literature-detail.css";
 
-type ThemeSimilarity = {
-  label: string;
-  value: number;
+type TagCategory =
+  | "ERA_SETTING"
+  | "GENRE"
+  | "SUBJECT"
+  | "MOOD"
+  | "RELATIONSHIP"
+  | "CULTURAL_CONTEXT";
+
+type LiteratureTag = {
+  tag_id: number;
+  name: string;
+  category: TagCategory;
+  literature_weight: number;
+  is_matched: boolean;
 };
 
-type KeywordTag = {
-  label: string;
-  type: "shared" | "unique";
+type RecommendationDetail = {
+  content_id: number;
+  work_id: number;
+  similarity_score: number; // 0 ~ 1
+  category_scores: Partial<Record<TagCategory, number>>; // 0 ~ 1
+  literature_tags: LiteratureTag[];
 };
 
-//API 연동 시 params.id로 실제 문학 상세 데이터를 받아오도록 교체.
-const mockBook = {
-  title: "토지",
-  author: "박경리",
-  type: "장편소설",
-  publishedYear: "1994",
-  matchPercent: 87,
-  matchHeading: "추천 포인트",
-  matchDescription:
-    "시대적 배경과 장르에서 특히 닮아 있어요.\n두 작품은 일제강점기, 전쟁, 농촌 등의 키워드를 공통으로 가지고 있어요.",
+type LiteraryWork = {
+  work_id: number;
+  title: string;
+  author: string | null;
+  summary: string | null;
+  genre: string | null;
+  main_genre: string | null;
+  sub_genre: string | null;
+  era: string | null;
+  published_year: number | null;
+  isbn13: string | null;
+  cover_url: string | null;
+  literature_type: string | null;
+  source: string | null;
+  created_at: string;
 };
 
-const themeSimilarities: ThemeSimilarity[] = [
-  { label: "시대·배경", value: 87 },
-  { label: "장르", value: 76 },
-  { label: "소재·주제", value: 58 },
-  { label: "정서", value: 37 },
-  { label: "관계", value: 22 },
-  { label: "문화 맥락", value: 13 },
-];
+type Translation = {
+  translation_id: number;
+  work_id: number;
+  language: string;
+  translated_title: string | null;
+  translator: string | null;
+  publisher: string | null;
+  isbn: string | null;
+  purchase_url: string | null;
+  cover_url: string | null;
+  published_year: number | null;
+};
 
-const keywordTags: KeywordTag[] = [
-  { label: "농촌", type: "shared" },
-  { label: "일제강점기", type: "shared" },
-  { label: "전쟁", type: "shared" },
-  { label: "이산가족", type: "shared" },
-  { label: "사랑", type: "unique" },
-  { label: "가족", type: "unique" },
-  { label: "신분제", type: "unique" },
-  { label: "지리산", type: "unique" },
-  { label: "토지", type: "unique" },
+type FavoriteWork = {
+  work_id: number;
+  [key: string]: unknown;
+};
+
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+const CATEGORY_LABELS: Record<TagCategory, string> = {
+  ERA_SETTING: "시대·배경",
+  GENRE: "장르",
+  SUBJECT: "소재·주제",
+  MOOD: "정서",
+  RELATIONSHIP: "관계",
+  CULTURAL_CONTEXT: "문화 맥락",
+};
+
+
+const CATEGORY_ORDER: TagCategory[] = [
+  "ERA_SETTING",
+  "GENRE",
+  "SUBJECT",
+  "MOOD",
+  "RELATIONSHIP",
+  "CULTURAL_CONTEXT",
 ];
 
 const tabs = [
@@ -55,23 +92,189 @@ const tabs = [
 
 type TabId = (typeof tabs)[number]["id"];
 
+
+async function fetchJSON<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE_URL}${path}`, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`API 요청 실패 (${res.status}): ${path}`);
+  }
+  return res.json();
+}
+
+// TODO: 실제 로그인 토큰 저장 키 이름으로 바꿔주세요.
+// (쿠키 기반 세션을 쓰신다면 이 함수 대신 credentials: "include" 방식으로 바꾸면 됩니다.)
+const TOKEN_STORAGE_KEY = "SECRET_KEY";
+
+function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_STORAGE_KEY);
+}
+
+async function authFetchJSON<T>(
+  path: string,
+  init: RequestInit = {}
+): Promise<T> {
+  const token = getAuthToken();
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    cache: "no-store",
+    headers: {
+      ...(init.headers ?? {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`API 요청 실패 (${res.status}): ${path}`);
+  }
+  // 204 No Content 대응
+  if (res.status === 204) return undefined as T;
+  return res.json();
+}
+
+
+function buildRecommendationCopy(
+  categoryScores: Partial<Record<TagCategory, number>>,
+  literatureTags: LiteratureTag[]
+) {
+  const topCategories = CATEGORY_ORDER.filter((c) => categoryScores[c] !== undefined)
+    .sort((a, b) => (categoryScores[b] ?? 0) - (categoryScores[a] ?? 0))
+    .slice(0, 2)
+    .map((c) => CATEGORY_LABELS[c]);
+
+  const sharedTagNames = literatureTags
+    .filter((t) => t.is_matched)
+    .slice(0, 4)
+    .map((t) => t.name);
+
+  const line1 =
+    topCategories.length > 0
+      ? `${topCategories.join(", ")}에서 특히 닮아 있어요.`
+      : "여러 테마에서 닮은 점이 있어요.";
+  const line2 =
+    sharedTagNames.length > 0
+      ? `두 작품은 ${sharedTagNames.join(", ")} 등의 키워드를 공통으로 가지고 있어요.`
+      : "";
+
+  return {
+    heading: "추천 포인트",
+    description: [line1, line2].filter(Boolean).join("\n"),
+  };
+}
+
+
 export default function LiteratureDetailPage({
   params,
 }: {
-  params: { workId: string };
+  params: { contentId: string; workId: string };
 }) {
-  // params.workId — 지금은 목데이터만 쓰지만, API 연동 시 이 값으로 상세 데이터를 fetch.
+  const { contentId, workId } = params;
+
   const [activeTab, setActiveTab] = useState<TabId>("intro");
-  const [liked, setLiked] = useState(true);
+  const [liked, setLiked] = useState(false);
+
+  const [work, setWork] = useState<LiteraryWork | null>(null);
+  const [recommendation, setRecommendation] = useState<RecommendationDetail | null>(null);
+  const [translations, setTranslations] = useState<Translation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const [workData, recommendationData, translationData] = await Promise.all([
+          fetchJSON<LiteraryWork>(`/literatures/${workId}`),
+          fetchJSON<RecommendationDetail>(
+            `/k-contents/${contentId}/recommendations/${workId}`
+          ),
+          
+          fetchJSON<Translation[]>(`/translations/${workId}`).catch(() => [] as Translation[]),
+        ]);
+
+        if (cancelled) return;
+        setWork(workData);
+        setRecommendation(recommendationData);
+        setTranslations(translationData);
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "데이터를 불러오지 못했어요.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [contentId, workId]);
 
   const handleTabClick = (id: TabId) => {
     setActiveTab(id);
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const handleToggleLike = () => {
+    setLiked((prev) => !prev);
+  };
+
+  if (loading) {
+    return (
+      <div className="detail-page">
+        <div className="detail-body">
+          <p className="detail-body-text">불러오는 중이에요...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !work || !recommendation) {
+    return (
+      <div className="detail-page">
+        <div className="detail-body">
+          <button
+            type="button"
+            className="detail-back-button"
+            aria-label="뒤로 가기"
+            onClick={() => window.history.back()}
+          >
+            <BackIcon />
+          </button>
+          <p className="detail-body-text">{error ?? "작품 정보를 찾을 수 없어요."}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const matchPercent = Math.round(recommendation.similarity_score * 100);
+  const { heading: matchHeading, description: matchDescription } = buildRecommendationCopy(
+    recommendation.category_scores,
+    recommendation.literature_tags
+  );
+
+  const themeSimilarities = CATEGORY_ORDER.filter(
+    (c) => recommendation.category_scores[c] !== undefined
+  ).map((c) => ({
+    label: CATEGORY_LABELS[c],
+    value: Math.round((recommendation.category_scores[c] ?? 0) * 100),
+  }));
+
+  const keywordTags = [...recommendation.literature_tags]
+    .sort((a, b) => Number(b.is_matched) - Number(a.is_matched))
+    .map((tag) => ({
+      label: tag.name,
+      type: tag.is_matched ? ("shared" as const) : ("unique" as const),
+    }));
+
+  const primaryTranslation =
+    translations.find((t) => t.language?.toLowerCase() === "en") ?? translations[0] ?? null;
+
   return (
     <div className="detail-page">
-
       <div className="detail-body">
         <button
           type="button"
@@ -86,33 +289,50 @@ export default function LiteratureDetailPage({
           {/* ---------- Overview card ---------- */}
           <section className="detail-card">
             <div className="detail-overview">
-              <div className="detail-cover">
-                <span className="detail-cover-eyebrow">{mockBook.type}</span>
-                <span className="detail-cover-title">{mockBook.title}</span>
-                <p className="detail-cover-tagline">
-                  한 집안 4세대 걸쳐 한국의 근현대사를 담아낸
-                  <br />
-                  우리 시대 최고의 고전
-                </p>
-                <div className="detail-cover-footer">
-                  <span className="detail-cover-chip" />
-                  <span className="detail-cover-chip" />
-                </div>
+              <div
+                className="detail-cover"
+                style={
+                  work.cover_url
+                    ? {
+                        backgroundImage: `url(${work.cover_url})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }
+                    : undefined
+                }
+              >
+                {!work.cover_url && (
+                  <>
+                    <span className="detail-cover-eyebrow">
+                      {work.literature_type ?? work.main_genre ?? ""}
+                    </span>
+                    <span className="detail-cover-title">{work.title}</span>
+                    {work.summary && (
+                      <p className="detail-cover-tagline">{work.summary}</p>
+                    )}
+                    <div className="detail-cover-footer">
+                      <span className="detail-cover-chip" />
+                      <span className="detail-cover-chip" />
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="detail-info">
                 <div className="detail-info-header">
                   <div>
-                    <h1 className="detail-title">{mockBook.title}</h1>
+                    <h1 className="detail-title">{work.title}</h1>
                     <p className="detail-subtitle">
-                      {mockBook.author} · {mockBook.type} · {mockBook.publishedYear}
+                      {[work.author, work.literature_type ?? work.main_genre, work.published_year]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                   </div>
                   <button
                     type="button"
                     className={`heart-button-lg ${liked ? "heart-button-lg--active" : ""}`}
                     aria-label={liked ? "찜 해제" : "찜하기"}
-                    onClick={() => setLiked((prev) => !prev)}
+                    onClick={handleToggleLike}
                   >
                     <HeartIcon filled={liked} />
                   </button>
@@ -121,11 +341,11 @@ export default function LiteratureDetailPage({
                 <section className="similarity-section">
                   <h2 className="section-label">K-콘텐츠와의 유사도</h2>
                   <div className="similarity-box">
-                    <DonutChart percent={mockBook.matchPercent} />
+                    <DonutChart percent={matchPercent} />
                     <div className="similarity-text">
-                      <p className="similarity-heading">{mockBook.matchHeading}</p>
+                      <p className="similarity-heading">{matchHeading}</p>
                       <p className="similarity-desc">
-                        {mockBook.matchDescription.split("\n").map((line, i) => (
+                        {matchDescription.split("\n").map((line, i) => (
                           <span key={i}>
                             {line}
                             <br />
@@ -207,13 +427,14 @@ export default function LiteratureDetailPage({
             <section id="intro" className="detail-section">
               <h2 className="section-label">책 소개</h2>
               <p className="detail-body-text">
-                줄거리를 작성하세요.
-                <br />
-                줄거리 줄거리 줄거리 줄거리...............................
-                <br />
-                줄거리
-                <br />
-                줄거리
+                {work.summary
+                  ? work.summary.split("\n").map((line, i) => (
+                      <span key={i}>
+                        {line}
+                        <br />
+                      </span>
+                    ))
+                  : "아직 등록된 줄거리가 없어요."}
               </p>
 
               <div className="ai-grid">
@@ -232,43 +453,67 @@ export default function LiteratureDetailPage({
 
             <section id="translation" className="detail-section">
               <h2 className="section-label">번역본 정보</h2>
-              <div className="translation-row">
-                <div className="translation-thumb" />
-                <dl className="translation-list">
-                  <div className="translation-item">
-                    <dt>번역본 제목</dt>
-                    <dd>토지</dd>
-                  </div>
-                  <div className="translation-item">
-                    <dt>언어</dt>
-                    <dd>영어</dd>
-                  </div>
-                  <div className="translation-item">
-                    <dt>번역가</dt>
-                    <dd>번역가</dd>
-                  </div>
-                  <div className="translation-item">
-                    <dt>출판사</dt>
-                    <dd>출판사</dd>
-                  </div>
-                  <div className="translation-item">
-                    <dt>출판 연도</dt>
-                    <dd>출판 연도</dd>
-                  </div>
-                  <div className="translation-item">
-                    <dt>ISBN</dt>
-                    <dd>1236</dd>
-                  </div>
-                  <div className="translation-item">
-                    <dt>구매 링크</dt>
-                    <dd>
-                      <a href="#" className="translation-link">
-                        바로 가기
-                      </a>
-                    </dd>
-                  </div>
-                </dl>
-              </div>
+              {primaryTranslation ? (
+                <div className="translation-row">
+                  <div
+                    className="translation-thumb"
+                    style={
+                      primaryTranslation.cover_url
+                        ? {
+                            backgroundImage: `url(${primaryTranslation.cover_url})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }
+                        : undefined
+                    }
+                  />
+                  <dl className="translation-list">
+                    <div className="translation-item">
+                      <dt>번역본 제목</dt>
+                      <dd>{primaryTranslation.translated_title ?? "-"}</dd>
+                    </div>
+                    <div className="translation-item">
+                      <dt>언어</dt>
+                      <dd>{primaryTranslation.language}</dd>
+                    </div>
+                    <div className="translation-item">
+                      <dt>번역가</dt>
+                      <dd>{primaryTranslation.translator ?? "-"}</dd>
+                    </div>
+                    <div className="translation-item">
+                      <dt>출판사</dt>
+                      <dd>{primaryTranslation.publisher ?? "-"}</dd>
+                    </div>
+                    <div className="translation-item">
+                      <dt>출판 연도</dt>
+                      <dd>{primaryTranslation.published_year ?? "-"}</dd>
+                    </div>
+                    <div className="translation-item">
+                      <dt>ISBN</dt>
+                      <dd>{primaryTranslation.isbn ?? "-"}</dd>
+                    </div>
+                    <div className="translation-item">
+                      <dt>구매 링크</dt>
+                      <dd>
+                        {primaryTranslation.purchase_url ? (
+                          <a
+                            href={primaryTranslation.purchase_url}
+                            className="translation-link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            바로 가기
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              ) : (
+                <div className="ai-box-placeholder">등록된 번역본 정보가 없어요.</div>
+              )}
             </section>
 
             <hr className="detail-divider" />
@@ -292,6 +537,7 @@ export default function LiteratureDetailPage({
     </div>
   );
 }
+
 
 function DonutChart({ percent }: { percent: number }) {
   const radius = 46;
@@ -317,20 +563,6 @@ function DonutChart({ percent }: { percent: number }) {
       </svg>
       <span className="donut-chart-label">{percent}%</span>
     </div>
-  );
-}
-
-function UserIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="M4 20c0-3.3137 3.134-6 7-6h2c3.866 0 7 2.6863 7 6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
   );
 }
 
