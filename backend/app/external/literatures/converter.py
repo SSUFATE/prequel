@@ -10,6 +10,7 @@ def convert_to_literary_work(raw: dict) -> LiteraryWork:
         title=parsed.bookname,
         literature_type=None,
         author=parsed.authors,
+        isbn13=parsed.isbn13,
         summary=parsed.description,
         genre=parsed.class_nm,
         era=None,
