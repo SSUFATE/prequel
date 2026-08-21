@@ -5,6 +5,7 @@ export interface KContent {
   title: string;
   content_type: KContentType;
   overview: string | null;
+  platform: string | null;
   release_date: string;
   poster_url: string | null;
 }

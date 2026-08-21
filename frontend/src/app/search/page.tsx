@@ -13,6 +13,43 @@ import type { KContent } from "@/types/kcontent";
 
 const STORAGE_KEY = "prequel_recent_searches";
 
+// 검색어 색칠 함수
+const highlightMatch = (
+  title: string,
+  keyword: string
+) => {
+  const normalizedKeyword = keyword.trim();
+
+  if (!normalizedKeyword) {
+    return title;
+  }
+
+  const index = title
+    .toLowerCase()
+    .indexOf(normalizedKeyword.toLowerCase());
+
+  if (index === -1) {
+    return title;
+  }
+
+  return (
+    <>
+      {title.slice(0, index)}
+
+      <span className="suggestion-highlight">
+        {title.slice(
+          index,
+          index + normalizedKeyword.length
+        )}
+      </span>
+
+      {title.slice(
+        index + normalizedKeyword.length
+      )}
+    </>
+  )
+}
+
 export default function SearchPage() {
   const router = useRouter();
 
@@ -24,9 +61,53 @@ export default function SearchPage() {
     useState<string[]>([]);
 
   const [searchResults, setSearchResults] = useState<KContent[]>([]);
+  const [suggestions, setSuggestions] = useState<KContent[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 자동완성 조회
+  useEffect(() => {
+    const value = keyword.trim();
+
+    if (!value) {
+      setSuggestions([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const timer = setTimeout(async () => {
+      try {
+        const data = await getKContents({
+          search: value,
+          page: 1,
+          size: 5,
+        });
+
+        if (!cancelled) {
+          setSuggestions(data.items);
+        }
+      } catch (error) {
+        console.error("자동완성 검색 실패:", error);
+
+        if (!cancelled) {
+          setSuggestions([]);
+        }
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [keyword]);
+
+  // 자동완성 목록이 바뀔 때 선택값 초기화
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [suggestions]);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -97,6 +178,7 @@ export default function SearchPage() {
     if (!value) return;
 
     addRecentSearch(value);
+    setSuggestions([]);
 
     await searchContents(value);
   };
@@ -111,6 +193,19 @@ export default function SearchPage() {
     await searchContents(value);
   };
 
+  // 자동완성 클릭 함수
+  const handleSuggestionClick = (
+    content: KContent
+  ) => {
+    addRecentSearch(content.title);
+    setSuggestions([]);
+    setSelectedIndex(-1);
+
+    router.push(
+      `/k-contents/${content.content_id}/recommendations`
+    );
+  };
+
   const handleDelete = (target: string) => {
     updateRecentSearches(
       recentSearches.filter(
@@ -123,6 +218,7 @@ export default function SearchPage() {
     setKeyword("");
     setSearchedKeyword("");
     setSearchResults([]);
+    setSuggestions([]);
     setTotal(0);
     setError(null);
   };
@@ -143,53 +239,134 @@ export default function SearchPage() {
           </button>
         </div>
 
-        <form
-          className="search-page-form"
-          onSubmit={handleSearch}
-        >
-          <input
-            type="search"
-            value={keyword}
-            onChange={(event) => {
-              setKeyword(event.target.value);
-            }}
-            placeholder="당신이 재미있게 본 K-콘텐츠를 검색해보세요!"
-            autoFocus
-          />
-
-          {keyword && (
-            <button
-              type="button"
-              className="search-clear-button"
-              onClick={handleClearKeyword}
-              aria-label="검색어 지우기"
-            >
-              ×
-            </button>
-          )}
-
-          <button
-            type="submit"
-            className="search-submit-button"
-            aria-label="검색"
+        <div className="search-input-area">
+          <form
+            className="search-page-form"
+            onSubmit={handleSearch}
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <path
-                d="M11 19A8 8 0 1 0 11 3a8 8 0 0 0 0 16ZM21 21l-4.35-4.35"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </form>
+            <input
+              type="search"
+              value={keyword}
+              onChange={(event) => {
+                setKeyword(event.target.value);
 
-        {!hasSearched ? (
+                setSearchedKeyword("");
+                setSearchResults([]);
+                setTotal(0);
+                setError(null);
+              }}
+              onKeyDown={(event) => {
+                if (suggestions.length === 0) return;
+
+                if (event.key === "ArrowDown") {
+                  event.preventDefault();
+
+                  setSelectedIndex((prev) => 
+                    prev < suggestions.length -1 
+                      ? prev + 1
+                      : 0
+                  ); 
+                }
+
+                if (event.key === "ArrowUp") {
+                  event.preventDefault();
+
+                  setSelectedIndex((prev) =>
+                    prev > 0
+                      ? prev - 1
+                      : suggestions.length - 1
+                  );
+                }
+
+                if (
+                  event.key === "Enter" &&
+                  selectedIndex >= 0
+                ) {
+                  event.preventDefault();
+
+                  handleSuggestionClick(
+                    suggestions[selectedIndex]
+                  );
+                }
+
+                if (event.key === "Escape") {
+                  setSuggestions([]);
+                  setSelectedIndex(-1);
+                }
+              }}
+              placeholder="당신이 재미있게 본 K-콘텐츠를 검색해보세요!"
+              autoFocus
+            />
+
+            {keyword && (
+              <button
+                type="button"
+                className="search-clear-button"
+                onClick={handleClearKeyword}
+                aria-label="검색어 지우기"
+              >
+                ×
+              </button>
+            )}
+
+            <button
+              type="submit"
+              className="search-submit-button"
+              aria-label="검색"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M11 19A8 8 0 1 0 11 3a8 8 0 0 0 0 16ZM21 21l-4.35-4.35"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </form>
+
+        {/* 자동완성 검색어 제안 */}
+        {keyword.trim() &&
+          !hasSearched &&
+          suggestions.length > 0 && (
+            <div className="search-suggestions">
+              {suggestions.map((content, index) => (
+                <button
+                  key={content.content_id}
+                  type="button"
+                  className={`search-suggestion-item ${
+                    selectedIndex === index ? "selected" : ""
+                  }`}
+                  onMouseEnter={() => 
+                    setSelectedIndex(index)
+                  }
+                  onClick={() =>
+                    handleSuggestionClick(content)
+                  }
+                >
+                  <span className="suggestion-title">
+                    {highlightMatch(content.title, keyword)}
+                  </span>
+
+                  <span className="suggestion-meta">
+                    {content.content_type === "MOVIE"
+                      ? "영화"
+                      : content.content_type === "DRAMA"
+                      ? "드라마"
+                      : "웹툰"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>  
+
+        {!hasSearched && !keyword.trim() && (
           <section className="recent-search-section">
             <div className="recent-search-heading">
               <h2>최근 검색어</h2>
@@ -239,7 +416,9 @@ export default function SearchPage() {
               </ul>
             )}
           </section>
-        ) : searchResults.length > 0 ? (
+        )}
+
+        {hasSearched && searchResults.length > 0 && (
           <section className="search-results">
             <div className="search-results-heading">
               <h2>검색 결과</h2>
@@ -302,7 +481,11 @@ export default function SearchPage() {
               ))}
             </div>
           </section>
-        ) : (
+        )}
+
+        {hasSearched &&
+          !isLoading &&
+          searchResults.length === 0 && (
           <section className="search-empty">
             <div className="search-empty-content">
               <svg
