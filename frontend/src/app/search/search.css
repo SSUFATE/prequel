@@ -62,15 +62,21 @@
 
 
 /* =========================
-   검색창
+   검색창 영역
 ========================= */
 
-.search-page-form {
+.search-input-area {
   position: relative;
 
   width: 100%;
 
   margin-bottom: clamp(32px, 4vw, 48px);
+}
+
+.search-page-form {
+  position: relative;
+
+  width: 100%;
 }
 
 .search-page-form input {
@@ -114,6 +120,7 @@
 
 
 /* 브라우저 기본 search X 제거 */
+
 .search-page-form
   input[type="search"]::-webkit-search-cancel-button {
   display: none;
@@ -122,6 +129,7 @@
 
 
 /* X와 검색 아이콘 공통 */
+
 .search-clear-button,
 .search-submit-button {
   position: absolute;
@@ -152,6 +160,7 @@
 
 
 /* 검색어 삭제 */
+
 .search-clear-button {
   right: 52px;
 
@@ -162,6 +171,7 @@
 
 
 /* 돋보기 */
+
 .search-submit-button {
   right: 10px;
 }
@@ -175,6 +185,94 @@
 .search-submit-button:focus-visible {
   outline: 2px solid #222;
   outline-offset: 1px;
+}
+
+
+/* =========================
+   자동완성
+========================= */
+
+.search-suggestions {
+  width: 100%;
+
+  margin-top: 6px;
+
+  overflow: hidden;
+
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+
+  background: #fff;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.search-suggestion-item {
+  width: 100%;
+  min-height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding: 13px 18px;
+
+  border: 0;
+  background: #fff;
+
+  color: #222;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition: background-color 0.15s ease;
+}
+
+.search-suggestion-item + .search-suggestion-item {
+  border-top: 1px solid #f1f1f1;
+}
+
+.search-suggestion-item:hover {
+  background: #f8f8f8;
+}
+
+.search-suggestion-item:focus-visible {
+  position: relative;
+
+  outline: 2px solid #222;
+  outline-offset: -2px;
+}
+
+.suggestion-title {
+  flex: 1;
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: #222;
+
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.5;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggestion-highlight {
+  color: #f26a2e;
+  font-weight: 600;
+}
+
+.suggestion-meta {
+  flex-shrink: 0;
+
+  color: #999;
+
+  font-size: 0.8rem;
+  font-weight: 400;
 }
 
 
@@ -391,6 +489,7 @@
 
 
 /* 포스터가 아직 없을 때 */
+
 .poster-placeholder {
   width: 100%;
   height: 100%;
@@ -411,6 +510,7 @@
 
 
 /* 카드 정보 */
+
 .search-result-info {
   padding-top: 11px;
 }
@@ -449,6 +549,7 @@
 영화/드라마 글씨까지 흐려지기 때문에
 separator만 흐리게 처리
 */
+
 .search-result-info .separator {
   color: #bbb;
 }
@@ -544,7 +645,7 @@ separator만 흐리게 처리
     font-size: 1.6rem;
   }
 
-  .search-page-form {
+  .search-input-area {
     margin-bottom: 30px;
   }
 
@@ -571,6 +672,20 @@ separator만 흐리게 처리
     height: 32px;
   }
 
+  .search-suggestion-item {
+    min-height: 48px;
+
+    padding: 12px 14px;
+  }
+
+  .suggestion-title {
+    font-size: 0.9rem;
+  }
+
+  .suggestion-meta {
+    font-size: 0.76rem;
+  }
+
   .search-result-grid {
     grid-template-columns:
       repeat(2, minmax(0, 1fr));
@@ -593,6 +708,7 @@ separator만 흐리게 처리
 
 
 /* 아주 작은 모바일 */
+
 @media (max-width: 360px) {
   .search-page-inner {
     width: 88%;
@@ -605,4 +721,17 @@ separator만 흐리게 처리
   .search-result-card {
     max-width: 220px;
   }
+
+  .search-suggestion-item {
+    gap: 10px;
+  }
+}
+
+.search-suggestion-item .suggestion-title .suggestion-highlight {
+  color: #ff6b35;
+  font-weight: 700;
+}
+
+.search-suggestion-item.selected {
+  background: #f5f5f5;
 }
