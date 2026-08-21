@@ -14,12 +14,12 @@ class LiteraryWorkRepository:
             .first()
         )
 
-    def save(self, work: LiteraryWork) -> LiteraryWork:
-        self.db.add(work)
-        self.db.commit()
-        self.db.refresh(work)
-        return work
-
+    def find_by_isbn13(self, isbn13: str) -> LiteraryWork | None:
+        return (
+            self.db.query(LiteraryWork)
+            .filter(LiteraryWork.isbn13 == isbn13)
+            .first()
+        )
 
     def find_by_id(self, work_id: int) -> LiteraryWork | None:
         return (
@@ -68,3 +68,28 @@ class LiteraryWorkRepository:
             )
             .count()
         )
+
+    def find_missing_summary(self, limit: int = 50):
+        return (
+            self.db.query(LiteraryWork)
+            .filter(
+                LiteraryWork.isbn13.isnot(None),  
+                (LiteraryWork.summary.is_(None))
+                | (LiteraryWork.summary == ""),  
+            )
+            .order_by(LiteraryWork.work_id.asc())  
+            .limit(limit)
+            .all()
+        )
+
+    def update_summary(self, work: LiteraryWork, summary: str) -> LiteraryWork:
+        work.summary = summary
+        self.db.commit()
+        self.db.refresh(work)
+        return work
+
+    def save(self, work: LiteraryWork) -> LiteraryWork:
+        self.db.add(work)
+        self.db.commit()
+        self.db.refresh(work)
+        return work

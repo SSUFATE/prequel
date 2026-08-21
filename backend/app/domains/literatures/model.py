@@ -30,7 +30,7 @@ class LiteraryWork(Base):
     )
 
     title: Mapped[str] = mapped_column(
-        String(255),
+        String(500),
         nullable=False,
     )
 
@@ -39,7 +39,13 @@ class LiteraryWork(Base):
     )
 
     author: Mapped[str | None] = mapped_column(
-        String(100)
+        String(500)
+    )
+
+    isbn13: Mapped[str | None] = mapped_column(
+        String(13),
+        unique=True,
+        index=True,
     )
 
     summary: Mapped[str | None] = mapped_column(

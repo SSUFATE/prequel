@@ -16,16 +16,17 @@ class LibraryApiClient:
             "loaninfoYN": "Y",
             "format": "json",
         }
-        with httpx.Client(timeout=5.0) as client:
+        with httpx.Client(timeout=15.0) as client:
             res = client.get(BASE_URL, params=params)
             res.raise_for_status()
             return res.json()
 
-    def fetch_books_page(self, page_no: int, page_size: int = 100, start_dt: str | None = None, end_dt: str | None = None) -> dict:
+    def fetch_books_page(self, page_no: int, page_size: int = 100, start_dt: str | None = None, end_dt: str | None = None, kdc: str = "81") -> dict:
         params = {
             "authKey": AUTH_KEY,
             "pageNo": page_no,
             "pageSize": page_size,
+            "kdc": kdc,
             "format": "json",
         }
         if start_dt:
@@ -33,7 +34,7 @@ class LibraryApiClient:
         if end_dt:
             params["endDt"] = end_dt
 
-        with httpx.Client(timeout=15.0) as client:
+        with httpx.Client(timeout=60.0) as client:
             res = client.get("http://data4library.kr/api/srchBooks", params=params)
             res.raise_for_status()
             return res.json()
