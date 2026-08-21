@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./favorite.css";
+import { getMyFavoriteWorks, removeFavorite, type FavoriteWorkResponse } from "@/api/favorites";
 
 type favoriteBook = {
   id: string;
@@ -11,46 +12,66 @@ type favoriteBook = {
   publishedYear: string;
 };
 
-//API 연동 시 이 목데이터를 서버에서 받아온 찜 목록으로 교체.
-const mockfavoriteBooks: favoriteBook[] = [
-  { id: "1", title: "토지", author: "박경리", publishedYear: "1994" },
-  { id: "2", title: "토지", author: "박경리", publishedYear: "1994" },
-  { id: "3", title: "토지", author: "박경리", publishedYear: "1994" },
-  { id: "4", title: "토지", author: "박경리", publishedYear: "1994" },
-  { id: "5", title: "토지", author: "박경리", publishedYear: "1994" },
-];
+function toFavoriteBook(fav: FavoriteWorkResponse): favoriteBook {
+  return {
+    id: String(fav.work_id),
+    title: fav.title,
+    author: fav.author ?? "저자 미상",
+    publishedYear: fav.era ?? "",
+  };
+}
 
 export default function favoritePage() {
-  const [books, setBooks] = useState<favoriteBook[]>(mockfavoriteBooks);
+  const [books, setBooks] = useState<favoriteBook[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleRemove = (id: string) => {
+  useEffect(() => {
+    let cancelled = false;
+
+    getMyFavoriteWorks()
+      .then((data) => {
+        if (cancelled) return;
+        setBooks(data.map(toFavoriteBook));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "찜 목록을 불러오지 못했어요.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleRemove = async (id: string) => {
+    const removedBook = books.find((b) => b.id === id);
     setBooks((prev) => prev.filter((book) => book.id !== id));
+
+    try {
+      await removeFavorite(Number(id));
+    } catch (err) {
+      if (removedBook) {
+        setBooks((prev) => [...prev, removedBook]);
+      }
+      alert(err instanceof Error ? err.message : "찜 해제에 실패했어요.");
+    }
   };
 
   return (
     <div className="favorite-page">
-      {/* <header className="favorite-header">
-        <Link href="/" className="favorite-logo">
-          Prequel
-        </Link>
-
-        <nav className="favorite-nav">
-          <button type="button" className="nav-text-link">
-            로그아웃
-          </button>
-          <Link href="/favorite" className="nav-text-link nav-text-link--active">
-            찜
-          </Link>
-          <button type="button" className="icon-button" aria-label="마이페이지">
-            <UserIcon />
-          </button>
-        </nav>
-      </header> */}
 
       <main className="favorite-main">
         <h1 className="favorite-title">찜</h1>
 
-        {books.length === 0 ? (
+        {isLoading ? (
+          <p style={{ textAlign: "center", padding: "40px 0", color: "#999" }}>불러오는 중...</p>
+        ) : error ? (
+          <p style={{ textAlign: "center", padding: "40px 0", color: "#E5484D" }}>{error}</p>
+        ) : books.length === 0 ? (
           <EmptyState />
         ) : (
           <ul className="favorite-grid">
