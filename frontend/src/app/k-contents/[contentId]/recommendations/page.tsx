@@ -336,7 +336,7 @@ export default function RecommendationPage() {
                   className="recommendation-card"
                   onClick={() =>
                     router.push(
-                      `/literatures/${item.work_id}`
+                      `/k-contents/${contentId}/recommendations/${item.work_id}`
                     )
                   }
                 >

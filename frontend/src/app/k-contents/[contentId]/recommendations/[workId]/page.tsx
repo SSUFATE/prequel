@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import "./literature-detail.css";
 
 type TagCategory =
@@ -22,8 +22,8 @@ type LiteratureTag = {
 type RecommendationDetail = {
   content_id: number;
   work_id: number;
-  similarity_score: number; // 0 ~ 1
-  category_scores: Partial<Record<TagCategory, number>>; // 0 ~ 1
+  similarity_score: number;
+  category_scores: Partial<Record<TagCategory, number>>;
   literature_tags: LiteratureTag[];
 };
 
@@ -44,26 +44,25 @@ type LiteraryWork = {
   created_at: string;
 };
 
+// FastAPI TranslationResponse DTO 필드 매핑 대응 타입
 type Translation = {
-  translation_id: number;
-  work_id: number;
-  language: string;
-  translated_title: string | null;
-  translator: string | null;
-  publisher: string | null;
-  isbn: string | null;
-  purchase_url: string | null;
-  cover_url: string | null;
-  published_year: number | null;
+  translation_id?: number;
+  work_id?: number;
+  language?: string | null;
+  translated_title?: string | null;
+  title?: string | null; // 백엔드 DTO 호환
+  translator?: string | null;
+  publisher?: string | null;
+  isbn?: string | null;
+  isbn13?: string | null; // 백엔드 DTO 호환
+  purchase_url?: string | null;
+  cover_url?: string | null;
+  cover_image?: string | null; // 백엔드 DTO 호환
+  published_year?: number | null;
+  publication_year?: number | null; // 백엔드 DTO 호환
 };
 
-type FavoriteWork = {
-  work_id: number;
-  [key: string]: unknown;
-};
-
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 const CATEGORY_LABELS: Record<TagCategory, string> = {
   ERA_SETTING: "시대·배경",
@@ -73,7 +72,6 @@ const CATEGORY_LABELS: Record<TagCategory, string> = {
   RELATIONSHIP: "관계",
   CULTURAL_CONTEXT: "문화 맥락",
 };
-
 
 const CATEGORY_ORDER: TagCategory[] = [
   "ERA_SETTING",
@@ -92,7 +90,6 @@ const tabs = [
 
 type TabId = (typeof tabs)[number]["id"];
 
-
 async function fetchJSON<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, { cache: "no-store" });
   if (!res.ok) {
@@ -101,40 +98,9 @@ async function fetchJSON<T>(path: string): Promise<T> {
   return res.json();
 }
 
-// TODO: 실제 로그인 토큰 저장 키 이름으로 바꿔주세요.
-// (쿠키 기반 세션을 쓰신다면 이 함수 대신 credentials: "include" 방식으로 바꾸면 됩니다.)
-const TOKEN_STORAGE_KEY = "SECRET_KEY";
-
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_STORAGE_KEY);
-}
-
-async function authFetchJSON<T>(
-  path: string,
-  init: RequestInit = {}
-): Promise<T> {
-  const token = getAuthToken();
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    cache: "no-store",
-    headers: {
-      ...(init.headers ?? {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-  if (!res.ok) {
-    throw new Error(`API 요청 실패 (${res.status}): ${path}`);
-  }
-  // 204 No Content 대응
-  if (res.status === 204) return undefined as T;
-  return res.json();
-}
-
-
 function buildRecommendationCopy(
-  categoryScores: Partial<Record<TagCategory, number>>,
-  literatureTags: LiteratureTag[]
+  categoryScores: Partial<Record<TagCategory, number>> = {},
+  literatureTags: LiteratureTag[] = []
 ) {
   const topCategories = CATEGORY_ORDER.filter((c) => categoryScores[c] !== undefined)
     .sort((a, b) => (categoryScores[b] ?? 0) - (categoryScores[a] ?? 0))
@@ -161,13 +127,13 @@ function buildRecommendationCopy(
   };
 }
 
-
 export default function LiteratureDetailPage({
   params,
 }: {
-  params: { contentId: string; workId: string };
+  params: Promise<{ contentId: string; workId: string }>;
 }) {
-  const { contentId, workId } = params;
+  const resolvedParams = use(params);
+  const { contentId, workId } = resolvedParams;
 
   const [activeTab, setActiveTab] = useState<TabId>("intro");
   const [liked, setLiked] = useState(false);
@@ -190,14 +156,13 @@ export default function LiteratureDetailPage({
           fetchJSON<RecommendationDetail>(
             `/k-contents/${contentId}/recommendations/${workId}`
           ),
-          
           fetchJSON<Translation[]>(`/translations/${workId}`).catch(() => [] as Translation[]),
         ]);
 
         if (cancelled) return;
         setWork(workData);
         setRecommendation(recommendationData);
-        setTranslations(translationData);
+        setTranslations(Array.isArray(translationData) ? translationData : []);
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "데이터를 불러오지 못했어요.");
@@ -250,28 +215,35 @@ export default function LiteratureDetailPage({
     );
   }
 
-  const matchPercent = Math.round(recommendation.similarity_score * 100);
+  const matchPercent = Math.round((recommendation.similarity_score ?? 0) * 100);
   const { heading: matchHeading, description: matchDescription } = buildRecommendationCopy(
-    recommendation.category_scores,
-    recommendation.literature_tags
+    recommendation.category_scores ?? {},
+    recommendation.literature_tags ?? []
   );
 
-  const themeSimilarities = CATEGORY_ORDER.filter(
-    (c) => recommendation.category_scores[c] !== undefined
-  ).map((c) => ({
+  const themeSimilarities = CATEGORY_ORDER.map((c) => ({
     label: CATEGORY_LABELS[c],
-    value: Math.round((recommendation.category_scores[c] ?? 0) * 100),
+    value: Math.round(((recommendation.category_scores ?? {})[c] ?? 0) * 100),
   }));
 
-  const keywordTags = [...recommendation.literature_tags]
+  const keywordTags = [...(recommendation.literature_tags ?? [])]
     .sort((a, b) => Number(b.is_matched) - Number(a.is_matched))
     .map((tag) => ({
       label: tag.name,
       type: tag.is_matched ? ("shared" as const) : ("unique" as const),
     }));
 
+  // 번역본 선택 우선순위: 영어(en) 번역본 우선 -> 첫 번째 번역본
   const primaryTranslation =
-    translations.find((t) => t.language?.toLowerCase() === "en") ?? translations[0] ?? null;
+    translations.find((t) => t.language?.toLowerCase() === "en" || t.language?.toLowerCase() === "english") ??
+    translations[0] ??
+    null;
+
+  // 필드명 호환 바인딩
+  const translationTitle = primaryTranslation?.translated_title ?? primaryTranslation?.title ?? "-";
+  const translationCover = primaryTranslation?.cover_url ?? primaryTranslation?.cover_image ?? null;
+  const translationYear = primaryTranslation?.published_year ?? primaryTranslation?.publication_year ?? "-";
+  const translationIsbn = primaryTranslation?.isbn ?? primaryTranslation?.isbn13 ?? "-";
 
   return (
     <div className="detail-page">
@@ -310,10 +282,6 @@ export default function LiteratureDetailPage({
                     {work.summary && (
                       <p className="detail-cover-tagline">{work.summary}</p>
                     )}
-                    <div className="detail-cover-footer">
-                      <span className="detail-cover-chip" />
-                      <span className="detail-cover-chip" />
-                    </div>
                   </>
                 )}
               </div>
@@ -384,9 +352,9 @@ export default function LiteratureDetailPage({
                 <div>
                   <h3 className="reason-subtitle">키워드로 보는 연결점</h3>
                   <div className="keyword-tags">
-                    {keywordTags.map((keyword) => (
+                    {keywordTags.map((keyword, i) => (
                       <span
-                        key={keyword.label}
+                        key={`${keyword.label}-${i}`}
                         className={`keyword-tag keyword-tag--${keyword.type}`}
                       >
                         # {keyword.label}
@@ -451,70 +419,77 @@ export default function LiteratureDetailPage({
 
             <hr className="detail-divider" />
 
-            <section id="translation" className="detail-section">
-              <h2 className="section-label">번역본 정보</h2>
-              {primaryTranslation ? (
-                <div className="translation-row">
-                  <div
-                    className="translation-thumb"
-                    style={
-                      primaryTranslation.cover_url
-                        ? {
-                            backgroundImage: `url(${primaryTranslation.cover_url})`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                          }
-                        : undefined
+        {/* ---------- 하단 번역본 정보 섹션 ---------- */}
+        <section id="translation" className="detail-section">
+        <h2 className="section-label">번역본 정보</h2>
+        {primaryTranslation ? (
+            <div className="translation-row" style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+            <div
+                className="translation-thumb"
+                style={{
+                width: "140px",
+                height: "200px", // 세로로 길쭉한 책 표지 비율
+                flexShrink: 0,
+                borderRadius: "8px",
+                backgroundColor: "#f5f5f5", // 이미지 여백 부분 연한 배경 처리
+                ...(translationCover
+                    ? {
+                        backgroundImage: `url(${translationCover})`,
+                        backgroundSize: "contain", // 짤리지 않고 전체 표지 노출
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "center",
                     }
-                  />
-                  <dl className="translation-list">
-                    <div className="translation-item">
-                      <dt>번역본 제목</dt>
-                      <dd>{primaryTranslation.translated_title ?? "-"}</dd>
-                    </div>
-                    <div className="translation-item">
-                      <dt>언어</dt>
-                      <dd>{primaryTranslation.language}</dd>
-                    </div>
-                    <div className="translation-item">
-                      <dt>번역가</dt>
-                      <dd>{primaryTranslation.translator ?? "-"}</dd>
-                    </div>
-                    <div className="translation-item">
-                      <dt>출판사</dt>
-                      <dd>{primaryTranslation.publisher ?? "-"}</dd>
-                    </div>
-                    <div className="translation-item">
-                      <dt>출판 연도</dt>
-                      <dd>{primaryTranslation.published_year ?? "-"}</dd>
-                    </div>
-                    <div className="translation-item">
-                      <dt>ISBN</dt>
-                      <dd>{primaryTranslation.isbn ?? "-"}</dd>
-                    </div>
-                    <div className="translation-item">
-                      <dt>구매 링크</dt>
-                      <dd>
-                        {primaryTranslation.purchase_url ? (
-                          <a
-                            href={primaryTranslation.purchase_url}
-                            className="translation-link"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            바로 가기
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </dd>
-                    </div>
-                  </dl>
+                    : {}),
+                }}
+            />
+            <dl className="translation-list">
+                <div className="translation-item">
+                <dt>번역본 제목</dt>
+                <dd>{translationTitle}</dd>
                 </div>
-              ) : (
-                <div className="ai-box-placeholder">등록된 번역본 정보가 없어요.</div>
-              )}
-            </section>
+                <div className="translation-item">
+                <dt>언어</dt>
+                <dd>{primaryTranslation.language ?? "-"}</dd>
+                </div>
+                <div className="translation-item">
+                <dt>번역가</dt>
+                <dd>{primaryTranslation.translator ?? "-"}</dd>
+                </div>
+                <div className="translation-item">
+                <dt>출판사</dt>
+                <dd>{primaryTranslation.publisher ?? "-"}</dd>
+                </div>
+                <div className="translation-item">
+                <dt>출판 연도</dt>
+                <dd>{translationYear}</dd>
+                </div>
+                <div className="translation-item">
+                <dt>ISBN</dt>
+                <dd>{translationIsbn}</dd>
+                </div>
+                <div className="translation-item">
+                <dt>구매 링크</dt>
+                <dd>
+                    {primaryTranslation.purchase_url ? (
+                    <a
+                        href={primaryTranslation.purchase_url}
+                        className="translation-link"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        바로 가기
+                    </a>
+                    ) : (
+                    "-"
+                    )}
+                </dd>
+                </div>
+            </dl>
+            </div>
+        ) : (
+            <div className="ai-box-placeholder">등록된 번역본 정보가 없어요.</div>
+        )}
+        </section>  
 
             <hr className="detail-divider" />
 
@@ -537,7 +512,6 @@ export default function LiteratureDetailPage({
     </div>
   );
 }
-
 
 function DonutChart({ percent }: { percent: number }) {
   const radius = 46;
