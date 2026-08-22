@@ -9,23 +9,32 @@ class TranslationRepository:
     def find_by_work_and_language(self, work_id: int, language: str) -> Translation | None:
         return (
             self.db.query(Translation)
-            .filter(Translation.work_id == work_id, Translation.language == language)
+            .filter(Translation.work_id == work_id, Translation.language.ilike(f"%{language}%"))
             .first()
         )
 
     def find_all_by_work(self, work_id: int, language: str | None = None) -> list[Translation]:
         query = self.db.query(Translation).filter(Translation.work_id == work_id)
         if language:
-            query = query.filter(Translation.language == language)
+            query = query.filter(Translation.language.ilike(f"%{language}%"))
         return query.all()
 
     def save_all(self, translations: list[Translation]) -> list[Translation]:
+        if not translations:
+            return []
+
         saved = []
         for t in translations:
             existing = self.find_by_work_and_language(t.work_id, t.language)
             if existing:
+                saved.append(existing)
                 continue
+            
             self.db.add(t)
             saved.append(t)
+        
         self.db.commit()
+        for t in saved:
+            self.db.refresh(t)
+            
         return saved
