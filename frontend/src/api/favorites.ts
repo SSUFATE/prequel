@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPostEmpty } from "./client"; 
+import { apiDelete, apiGet, apiPostEmpty } from "./client";
 
 export interface FavoriteWorkResponse {
   favorite_id: number;
