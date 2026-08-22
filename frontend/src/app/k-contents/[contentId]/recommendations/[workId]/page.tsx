@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import "./literature-detail.css";
+import { addFavorite, removeFavorite } from "@/api/favorites";
 
 type TagCategory =
   | "ERA_SETTING"
@@ -41,25 +42,25 @@ type LiteraryWork = {
   cover_url: string | null;
   literature_type: string | null;
   source: string | null;
+  is_favorite?: boolean;
   created_at: string;
 };
 
-// FastAPI TranslationResponse DTO 필드 매핑 대응 타입
 type Translation = {
   translation_id?: number;
   work_id?: number;
   language?: string | null;
   translated_title?: string | null;
-  title?: string | null; // 백엔드 DTO 호환
+  title?: string | null;
   translator?: string | null;
   publisher?: string | null;
   isbn?: string | null;
-  isbn13?: string | null; // 백엔드 DTO 호환
+  isbn13?: string | null;
   purchase_url?: string | null;
   cover_url?: string | null;
-  cover_image?: string | null; // 백엔드 DTO 호환
+  cover_image?: string | null;
   published_year?: number | null;
-  publication_year?: number | null; // 백엔드 DTO 호환
+  publication_year?: number | null;
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
@@ -137,6 +138,7 @@ export default function LiteratureDetailPage({
 
   const [activeTab, setActiveTab] = useState<TabId>("intro");
   const [liked, setLiked] = useState(false);
+  const [isLikingLoading, setIsLikingLoading] = useState(false);
 
   const [work, setWork] = useState<LiteraryWork | null>(null);
   const [recommendation, setRecommendation] = useState<RecommendationDetail | null>(null);
@@ -161,6 +163,7 @@ export default function LiteratureDetailPage({
 
         if (cancelled) return;
         setWork(workData);
+        setLiked(workData.is_favorite ?? false);
         setRecommendation(recommendationData);
         setTranslations(Array.isArray(translationData) ? translationData : []);
       } catch (e) {
@@ -183,8 +186,27 @@ export default function LiteratureDetailPage({
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const handleToggleLike = () => {
-    setLiked((prev) => !prev);
+  const handleToggleLike = async () => {
+    if (isLikingLoading || !work) return;
+
+    const previousLiked = liked;
+    const nextLiked = !liked;
+
+    setLiked(nextLiked);
+    setIsLikingLoading(true);
+
+    try {
+      if (nextLiked) {
+        await addFavorite(work.work_id);
+      } else {
+        await removeFavorite(work.work_id);
+      }
+    } catch (err) {
+      setLiked(previousLiked);
+      alert(err instanceof Error ? err.message : "처리에 실패했습니다.");
+    } finally {
+      setIsLikingLoading(false);
+    }
   };
 
   if (loading) {
@@ -233,13 +255,11 @@ export default function LiteratureDetailPage({
       type: tag.is_matched ? ("shared" as const) : ("unique" as const),
     }));
 
-  // 번역본 선택 우선순위: 영어(en) 번역본 우선 -> 첫 번째 번역본
   const primaryTranslation =
     translations.find((t) => t.language?.toLowerCase() === "en" || t.language?.toLowerCase() === "english") ??
     translations[0] ??
     null;
 
-  // 필드명 호환 바인딩
   const translationTitle = primaryTranslation?.translated_title ?? primaryTranslation?.title ?? "-";
   const translationCover = primaryTranslation?.cover_url ?? primaryTranslation?.cover_image ?? null;
   const translationYear = primaryTranslation?.published_year ?? primaryTranslation?.publication_year ?? "-";
@@ -258,7 +278,7 @@ export default function LiteratureDetailPage({
         </button>
 
         <div className="detail-content">
-          {/* ---------- Overview card ---------- */}
+          {/* Overview card */}
           <section className="detail-card">
             <div className="detail-overview">
               <div
@@ -301,6 +321,8 @@ export default function LiteratureDetailPage({
                     className={`heart-button-lg ${liked ? "heart-button-lg--active" : ""}`}
                     aria-label={liked ? "찜 해제" : "찜하기"}
                     onClick={handleToggleLike}
+                    disabled={isLikingLoading}
+                    style={{ color: liked ? "#E5484D" : "inherit" }}
                   >
                     <HeartIcon filled={liked} />
                   </button>
@@ -375,7 +397,7 @@ export default function LiteratureDetailPage({
             </section>
           </section>
 
-          {/* ---------- Tabbed detail card ---------- */}
+          {/* Tabbed detail card */}
           <section className="detail-card">
             <nav className="detail-tabs" role="tablist">
               {tabs.map((tab) => (
@@ -419,77 +441,76 @@ export default function LiteratureDetailPage({
 
             <hr className="detail-divider" />
 
-        {/* ---------- 하단 번역본 정보 섹션 ---------- */}
-        <section id="translation" className="detail-section">
-        <h2 className="section-label">번역본 정보</h2>
-        {primaryTranslation ? (
-            <div className="translation-row" style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-            <div
-                className="translation-thumb"
-                style={{
-                width: "140px",
-                height: "200px", // 세로로 길쭉한 책 표지 비율
-                flexShrink: 0,
-                borderRadius: "8px",
-                backgroundColor: "#f5f5f5", // 이미지 여백 부분 연한 배경 처리
-                ...(translationCover
-                    ? {
-                        backgroundImage: `url(${translationCover})`,
-                        backgroundSize: "contain", // 짤리지 않고 전체 표지 노출
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: "center",
-                    }
-                    : {}),
-                }}
-            />
-            <dl className="translation-list">
-                <div className="translation-item">
-                <dt>번역본 제목</dt>
-                <dd>{translationTitle}</dd>
+            <section id="translation" className="detail-section">
+              <h2 className="section-label">번역본 정보</h2>
+              {primaryTranslation ? (
+                <div className="translation-row" style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+                  <div
+                    className="translation-thumb"
+                    style={{
+                      width: "140px",
+                      height: "200px",
+                      flexShrink: 0,
+                      borderRadius: "8px",
+                      backgroundColor: "#f5f5f5",
+                      ...(translationCover
+                        ? {
+                            backgroundImage: `url(${translationCover})`,
+                            backgroundSize: "contain",
+                            backgroundRepeat: "no-repeat",
+                            backgroundPosition: "center",
+                          }
+                        : {}),
+                    }}
+                  />
+                  <dl className="translation-list">
+                    <div className="translation-item">
+                      <dt>번역본 제목</dt>
+                      <dd>{translationTitle}</dd>
+                    </div>
+                    <div className="translation-item">
+                      <dt>언어</dt>
+                      <dd>{primaryTranslation.language ?? "-"}</dd>
+                    </div>
+                    <div className="translation-item">
+                      <dt>번역가</dt>
+                      <dd>{primaryTranslation.translator ?? "-"}</dd>
+                    </div>
+                    <div className="translation-item">
+                      <dt>출판사</dt>
+                      <dd>{primaryTranslation.publisher ?? "-"}</dd>
+                    </div>
+                    <div className="translation-item">
+                      <dt>출판 연도</dt>
+                      <dd>{translationYear}</dd>
+                    </div>
+                    <div className="translation-item">
+                      <dt>ISBN</dt>
+                      <dd>{translationIsbn}</dd>
+                    </div>
+                    <div className="translation-item">
+                      <dt>구매 링크</dt>
+                      <dd>
+                        {primaryTranslation.purchase_url ? (
+                          <a
+                            href={primaryTranslation.purchase_url}
+                            className="translation-link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            바로 가기
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
-                <div className="translation-item">
-                <dt>언어</dt>
-                <dd>{primaryTranslation.language ?? "-"}</dd>
-                </div>
-                <div className="translation-item">
-                <dt>번역가</dt>
-                <dd>{primaryTranslation.translator ?? "-"}</dd>
-                </div>
-                <div className="translation-item">
-                <dt>출판사</dt>
-                <dd>{primaryTranslation.publisher ?? "-"}</dd>
-                </div>
-                <div className="translation-item">
-                <dt>출판 연도</dt>
-                <dd>{translationYear}</dd>
-                </div>
-                <div className="translation-item">
-                <dt>ISBN</dt>
-                <dd>{translationIsbn}</dd>
-                </div>
-                <div className="translation-item">
-                <dt>구매 링크</dt>
-                <dd>
-                    {primaryTranslation.purchase_url ? (
-                    <a
-                        href={primaryTranslation.purchase_url}
-                        className="translation-link"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        바로 가기
-                    </a>
-                    ) : (
-                    "-"
-                    )}
-                </dd>
-                </div>
-            </dl>
-            </div>
-        ) : (
-            <div className="ai-box-placeholder">등록된 번역본 정보가 없어요.</div>
-        )}
-        </section>  
+              ) : (
+                <div className="ai-box-placeholder">등록된 번역본 정보가 없어요.</div>
+              )}
+            </section>
 
             <hr className="detail-divider" />
 
