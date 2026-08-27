@@ -46,18 +46,18 @@ class TMDbClient:
         genre_id: int | None = None,
     ) -> list[dict]:
         params: dict[str, Any] = {
-            "language": "ko-KR",
-            "with_origin_country": "KR",
-            "with_original_language": "ko",
-            "primary_release_date.gte": "2010-01-01",
-            "sort_by": "popularity.desc",
-            "include_adult": False,
-            "vote_count.gte": 100,
+            "language": "ko-KR",                        
+            "with_origin_country": "KR",                # 한국 제작
+            "with_original_language": "ko",             # 원어 한국어
+            "primary_release_date.gte": "2000-01-01",   # 2000년 이후
+            "sort_by": "popularity.desc",               # 인기순
+            "include_adult": False,                     # 성인 콘텐츠 제외
+            "vote_count.gte": 50,                      # tmdb 투표 100개 이상
             "page": page,
         }
 
         if genre_id is not None:
-            params["with_genres"] = str(genre_id)
+            params["with_genres"] = str(genre_id)       # 장르별 수집
 
         data = self._get(
             "/discover/movie",
@@ -73,6 +73,7 @@ class TMDbClient:
             params={
                 "language": "ko-KR",
                 "with_origin_country": "KR",
+                "with_original_language": "ko",
                 "sort_by": "popularity.desc",
                 "include_adult": False,
                 "page": page,

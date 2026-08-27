@@ -82,7 +82,7 @@ def tv_to_dto(
     return TMDbContentDTO(
         tmdb_id=details["id"],
         title=details.get("name", ""),
-        content_type="TV",
+        content_type="DRAMA",
         overview=details.get("overview") or None,
         tmdb_genres=details.get("genres", []),
         runtime=runtime,
@@ -95,7 +95,7 @@ def tv_to_dto(
         ),
     )
 
-
+# csv에 저장
 def dto_to_csv_row(dto: TMDbContentDTO) -> dict:
     return {
         "tmdb_id": dto.tmdb_id,
