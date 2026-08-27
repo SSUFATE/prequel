@@ -17,16 +17,9 @@ class LiteraryWork(Base):
     __tablename__ = "literatures"
 
     work_id: Mapped[int] = mapped_column(
+        Integer,
         primary_key=True,
         autoincrement=True,
-    )
-
-    source_id: Mapped[int] = mapped_column(
-        nullable=False,
-    )
-
-    source: Mapped[str | None] = mapped_column(
-        String(50)
     )
 
     title: Mapped[str] = mapped_column(
@@ -35,17 +28,11 @@ class LiteraryWork(Base):
     )
 
     literature_type: Mapped[str | None] = mapped_column(
-        String(20)
+        String(50)
     )
 
     author: Mapped[str | None] = mapped_column(
         String(500)
-    )
-
-    isbn13: Mapped[str | None] = mapped_column(
-        String(13),
-        unique=True,
-        index=True,
     )
 
     summary: Mapped[str | None] = mapped_column(
@@ -68,12 +55,23 @@ class LiteraryWork(Base):
         Text
     )
 
+    source: Mapped[str | None] = mapped_column(
+        String(50)
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
     )
 
+    isbn13: Mapped[str | None] = mapped_column(
+        String(13),
+        unique=True,
+        index=True,
+    )
+
+    # Relationships
     tags: Mapped[list["LiteraryWorkTag"]] = relationship(
         back_populates="literary_work",
         cascade="all, delete-orphan",
