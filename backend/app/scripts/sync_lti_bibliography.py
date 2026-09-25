@@ -13,48 +13,73 @@ def fetch_all_and_cache():
     total_saved = 0
 
     try:
-        while True:
-            with httpx.Client(timeout=15.0) as client:
-                res = client.get(BASE_URL, params={"page": page, "items_per_page": 100})
+        with httpx.Client(timeout=15.0) as client:
+            while True:
+                res = client.get(
+                    BASE_URL,
+                    params={
+                        "page": page,
+                        "items_per_page": 100,
+                    },
+                )
                 res.raise_for_status()
                 data = res.json()
 
-            items = data.get("list", [])
-            if not items:
-                break
+                items = data.get("list", [])
+                if not items:
+                    break
 
-            for item in items:
-                nid = item.get("nid")
-                if not nid:
-                    continue
+                for item in items:
+                    nid = item.get("nid")
+                    if not nid:
+                        continue
 
-                existing = db.query(LtiBibliographyCache).filter(
-                    LtiBibliographyCache.nid == nid
-                ).first()
-                if existing:
-                    continue
+                    existing = (
+                        db.query(LtiBibliographyCache)
+                        .filter(LtiBibliographyCache.nid == nid)
+                        .first()
+                    )
 
-                db.add(LtiBibliographyCache(
-                    nid=nid,
-                    original_title=item.get("originalTitle"),
-                    author_kor=item.get("authorKor"),
-                    author=item.get("author"),
-                    language=item.get("language"),
-                    translator=item.get("translator"),
-                    publisher=item.get("publisher"),
-                    isbn=item.get("isbn"),
-                    published_year=item.get("publishedYear"),
-                    image=item.get("image"),
-                    url=item.get("url"),
-                ))
-                total_saved += 1
+                    if existing:
+                        continue
 
-            db.commit()
-            print(f"{page}페이지 완료 ({total_saved}건 누적)")
+                    db.add(
+                        LtiBibliographyCache(
+                            nid=nid,
 
-            if page * 100 >= data.get("count", 0):
-                break
-            page += 1
+                            # 번역본 / 원작 정보
+                            title=item.get("title"),
+                            original_title=item.get("originalTitle"),
+
+                            # 작가
+                            author_kor=item.get("authorKor"),
+                            author=item.get("author"),
+
+                            # 번역 정보
+                            language=item.get("language"),
+                            country=item.get("country"),
+                            translator=item.get("translator"),
+                            publisher=item.get("publisher"),
+
+                            # 출판 정보
+                            isbn=item.get("isbn"),
+                            published_year=item.get("publishedYear"),
+
+                            # 상세 정보
+                            description=item.get("description"),
+                            image=item.get("image"),
+                            url=item.get("url"),
+                        )
+                    )
+                    total_saved += 1
+
+                db.commit()
+                print(f"{page}페이지 완료 ({total_saved}건 누적)")
+
+                if page * 100 >= data.get("count", 0):
+                    break
+
+                page += 1
 
     finally:
         db.close()
