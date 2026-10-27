@@ -13,7 +13,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from pgvector.sqlalchemy import Vector
 
 if TYPE_CHECKING:
     from app.domains.tags.model import KContentTag
@@ -97,6 +97,11 @@ class KContent(Base):
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
+    )
+
+    embedding: Mapped[list[float] | None] = mapped_column(
+        Vector(1024),
+        nullable=True,
     )
 
     # 관계 연결

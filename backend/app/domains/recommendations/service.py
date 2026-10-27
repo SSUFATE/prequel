@@ -3,12 +3,14 @@ from collections import defaultdict
 
 
 from sqlalchemy.orm import Session
+from app.domains.kcontents.crud import get_kcontent_by_id
 from app.domains.recommendations.crud import (
     get_content_tags, 
     get_scored_literatures,
     get_matched_tags,
     get_category_scores,
-    get_literature_tags
+    get_literature_tags,
+    get_embedding_scored_literatures,
 )
 from app.domains.recommendations.constants import MAX_TAG_WEIGHT
 from app.domains.tags.constants import TagCategory
@@ -228,3 +230,53 @@ def get_recommendation_detail(
         "category_scores": category_scores,
         "literature_tags": literature_tags,
     }
+
+# 임베딩 기반 추천
+def get_embedding_recommendations_by_content_id(
+    db: Session,
+    content_id: int,
+    limit: int = 5,
+):
+    # 1. K콘텐츠 조회
+    content = get_kcontent_by_id(
+        db=db,
+        content_id=content_id,
+    )
+
+    if content is None:
+        return []
+
+    # 2. 임베딩이 생성되지 않은 콘텐츠
+    if content.embedding is None:
+        return []
+
+    # 3. embedding similarity 기준 문학 검색
+    scored_works = get_embedding_scored_literatures(
+        db=db,
+        content_embedding=content.embedding,
+        limit=limit,
+    )
+
+    # 4. 응답 생성
+    recommendations = []
+
+    for work, embedding_score in scored_works:
+        recommendations.append(
+            {
+                "work_id": work.work_id,
+                "title": work.title,
+                "author": work.author,
+                "summary": work.summary,
+                "genre": work.genre,
+                "era": work.era,
+                "published_year": work.published_year,
+                "cover_url": work.cover_url,
+                "similarity_score": round(
+                    float(embedding_score),
+                    3,
+                ),
+                "matched_tags": [],
+            }
+        )
+
+    return recommendations
