@@ -14,7 +14,7 @@ router = APIRouter(
     tags=["Recommendations"]
 )
 
-# 콘텐츠로 추천 문학 목록 조회
+# 태그 기반 문학 추천
 @router.get(
     "/{content_id}/recommendations",
     response_model=RecommendationListResponse,
@@ -108,3 +108,50 @@ def get_recommendation_detail(
         )
     
     return detail
+
+
+# 임베딩 기반 문학 추천
+@router.get(
+    "/{content_id}/embedding-recommendations",
+    response_model=RecommendationListResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_kcontent_embedding_recommendations(
+    content_id: int,
+    limit: int = Query(
+        default=5,
+        ge=1,
+        le=20,
+    ),
+    db: Session = Depends(get_db),
+):
+    kcontent = get_kcontent_by_id(
+        db=db,
+        content_id=content_id,
+    )
+
+    if kcontent is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="K-콘텐츠를 찾을 수 없습니다.",
+        )
+
+    if kcontent.embedding is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="콘텐츠 임베딩이 생성되지 않았습니다.",
+        )
+
+    recommendations = (
+        service.get_embedding_recommendations_by_content_id(
+            db=db,
+            content_id=content_id,
+            limit=limit,
+        )
+    )
+
+    return {
+        "content_id": kcontent.content_id,
+        "content_title": kcontent.title,
+        "recommendations": recommendations,
+    }

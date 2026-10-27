@@ -217,3 +217,25 @@ def get_literature_by_id(
         )
         .first()
     )
+
+
+# 임베딩 점수 기반 문학 추천
+def get_embedding_scored_literatures(
+    db: Session,
+    content_embedding,
+    limit: int = 5,
+):
+    distance = LiteraryWork.embedding.cosine_distance(
+        content_embedding
+    )
+
+    return (
+        db.query(
+            LiteraryWork,
+            (1 - distance).label("embedding_score"),
+        )
+        .filter(LiteraryWork.embedding.is_not(None))
+        .order_by(distance)
+        .limit(limit)
+        .all()
+    )

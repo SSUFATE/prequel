@@ -5,7 +5,7 @@ from sqlalchemy import DateTime, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
-
+from pgvector.sqlalchemy import Vector
 
 if TYPE_CHECKING:
     from app.domains.additional_info.model import Translation, VisualAid
@@ -69,6 +69,11 @@ class LiteraryWork(Base):
         String(13),
         unique=True,
         index=True,
+    )
+
+    embedding: Mapped[list[float] | None] = mapped_column(
+        Vector(1024),
+        nullable=True,
     )
 
     # Relationships

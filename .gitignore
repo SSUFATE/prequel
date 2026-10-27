@@ -23,3 +23,5 @@ frontend/*.tsbuildinfo
 .vscode/
 .DS_Store
 Thumbs.db
+
+local_scripts/
