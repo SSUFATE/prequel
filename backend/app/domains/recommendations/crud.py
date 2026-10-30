@@ -204,7 +204,7 @@ def get_literature_tags(
     return literature_tags
 
 
-# 서연 추가 - work_id로 문학작품 조회
+# work_id로 문학작품 조회
 # literatures 폴더로 옮기는 것 고려
 def get_literature_by_id(
     db: Session,
