@@ -1,204 +1,503 @@
+/* ==============================
+   Favorite Page
+============================== */
+
 .favorite-page {
   min-height: 100vh;
-  background: #f7f7f8;
+  background: #fffdf2;
   color: #1a1a1a;
+  font-family: inherit;
 }
 
-/* ---------- Header ---------- */
-
-.favorite-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 64px;
-  padding: 0 32px;
-  background: #ffffff;
-  border-bottom: 1px solid #eaeaea;
-}
-
-.favorite-logo {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #1a1a1a;
-  text-decoration: none;
-}
-
-.favorite-nav {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.nav-text-link {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 14px;
-  color: #6b6b6b;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.nav-text-link--active {
-  color: #1a1a1a;
-  font-weight: 600;
-}
-
-.icon-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: none;
-  color: #1a1a1a;
-  cursor: pointer;
-  padding: 0;
-}
-
-/* ---------- Main ---------- */
+/* ==============================
+   Main Layout
+============================== */
 
 .favorite-main {
-  max-width: 880px;
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 40px 32px 80px;
+  padding: 64px 48px 100px;
+  box-sizing: border-box;
+}
+
+/* ==============================
+   Page Heading
+============================== */
+
+.favorite-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 44px;
+}
+
+.favorite-eyebrow {
+  display: block;
+  margin-bottom: 12px;
+
+  color: #b47d58;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .favorite-title {
-  font-size: 20px;
+  margin: 0;
+
+  font-size: 36px;
   font-weight: 700;
-  margin: 0 0 24px;
+  line-height: 1.4;
+  letter-spacing: -0.03em;
 }
+
+.favorite-description {
+  margin: 12px 0 0;
+
+  font-size: 16px;
+  line-height: 1.7;
+  color: #8b8179;
+}
+
+.favorite-count {
+  flex-shrink: 0;
+
+  padding: 10px 18px;
+
+  border: 1px solid #e8d8c9;
+  border-radius: 999px;
+  background: #f5eee6;
+
+  color: #8b6246;
+  font-size: 14px;
+}
+
+.favorite-count strong {
+  color: #a56f4b;
+  font-weight: 700;
+}
+
+/* ==============================
+   Book Grid
+============================== */
 
 .favorite-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 28px 20px;
+
+  /* 데스크톱 5열 */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+
+  gap: 36px 24px;
+
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-@media (max-width: 640px) {
-  .favorite-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.favorite-grid > li {
+  min-width: 0;
 }
 
-/* ---------- Book card ---------- */
+/* ==============================
+   Book Card
+============================== */
 
 .book-card {
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.book-card-link {
+  display: block;
+
   color: inherit;
   text-decoration: none;
+
+  transition: transform 0.2s ease;
 }
+
+.book-card:hover .book-card-link {
+  transform: translateY(-4px);
+}
+
+/* ==============================
+   Book Cover
+============================== */
 
 .book-cover {
   position: relative;
-  aspect-ratio: 3 / 4;
-  border-radius: 4px;
+
+  width: 100%;
+  aspect-ratio: 3 / 4.3;
+
   overflow: hidden;
-  padding: 16px 14px;
+  border-radius: 12px;
+
+  background: #eee8e1;
+
+  box-shadow: 0 6px 16px rgba(80, 65, 50, 0.10);
+}
+
+.book-cover-image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition: transform 0.3s ease;
+}
+
+.book-card:hover .book-cover-image {
+  transform: scale(1.035);
+}
+
+/* ==============================
+   Cover Placeholder
+============================== */
+
+.book-cover-placeholder {
   display: flex;
   flex-direction: column;
-  background:
-    radial-gradient(120% 90% at 100% 0%, rgba(255, 255, 255, 0.08), transparent 60%),
-    linear-gradient(160deg, #2a3a72 0%, #202c5c 55%, #171f45 100%);
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+
+  width: 100%;
+  height: 100%;
+  padding: 18px;
+
+  box-sizing: border-box;
+
+  background: linear-gradient(
+    160deg,
+    #8b735e 0%,
+    #695342 100%
+  );
+
   color: #ffffff;
+  text-align: center;
 }
 
-.book-cover-eyebrow {
+.book-cover-placeholder span {
   font-size: 10px;
-  letter-spacing: 0.04em;
-  opacity: 0.7;
-}
-
-.book-cover-title {
-  margin-top: 6px;
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.book-cover-tagline {
-  margin-top: auto;
-  font-size: 9px;
-  line-height: 1.5;
+  letter-spacing: 0.15em;
   opacity: 0.75;
 }
 
-.book-cover-footer {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
+.book-cover-placeholder strong {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.5;
+  word-break: keep-all;
 }
 
-.book-cover-chip {
-  flex: 1;
-  height: 14px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.14);
-}
+/* ==============================
+   Book Information
+============================== */
 
 .book-info {
-  margin-top: 10px;
+  padding: 14px 4px 0;
 }
 
 .book-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
   margin: 0;
-  font-size: 14px;
+
+  font-size: 17px;
   font-weight: 700;
+  line-height: 1.5;
+
+  color: #222222;
+  word-break: keep-all;
+
+  /* 제목 최대 2줄 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+
+  padding-right: 28px;
 }
 
-.book-meta {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: #8b8b8b;
+.book-author {
+  margin: 7px 0 0;
+
+  font-size: 14px;
+  line-height: 1.5;
+  color: #8b8179;
 }
+
+.book-genre {
+  margin: 5px 0 0;
+
+  font-size: 13px;
+  line-height: 1.5;
+  color: #a28b78;
+}
+
+/* ==============================
+   Heart Button
+============================== */
 
 .heart-button {
+  position: absolute;
+
+  /* 책 표지 아래 제목 오른쪽 */
+  right: 2px;
+  top: auto;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  padding: 0;
+
+  width: 32px;
+  height: 32px;
+
+  padding: 4px;
+
   border: none;
-  background: none;
-  color: #c7c7c7;
+  border-radius: 50%;
+  background: transparent;
+
+  color: #b77b55;
+
   cursor: pointer;
-  flex-shrink: 0;
+  z-index: 2;
+
+  /* 표지 높이 + 정보 영역 여백 */
+  transform: translateY(0);
+  margin-top: 0;
+}
+
+.heart-button svg {
+  display: block;
+  width: 21px;
+  height: 21px;
+}
+
+.heart-button:hover {
+  background: #f3e8da;
 }
 
 .heart-button--active {
-  color: #ff5a5f;
+  color: #b77b55;
 }
 
-/* ---------- Empty state ---------- */
+.heart-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 하트를 책 정보 영역 오른쪽 상단에 배치 */
+.book-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.heart-button {
+  top: calc(100% - 67px);
+  right: 0;
+}
+
+/* ==============================
+   Loading / Error
+============================== */
+
+.favorite-message {
+  padding: 100px 20px;
+
+  text-align: center;
+  color: #8b8179;
+  font-size: 16px;
+}
+
+.favorite-error {
+  color: #c75b55;
+}
+
+/* ==============================
+   Empty State
+============================== */
 
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  max-width: 260px;
-  margin: 80px auto 0;
-  padding: 32px 24px;
-  background: #ffffff;
-  border-radius: 8px;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 420px;
+
+  margin: 60px auto 0;
+  padding: 40px 20px;
+
+  box-sizing: border-box;
+
+  /* 흰색 박스 제거 */
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+
   text-align: center;
 }
 
-.empty-state-text {
+.empty-state-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 80px;
+  height: 80px;
+
+  margin-bottom: 28px;
+
+  border-radius: 50%;
+  background: #f3ece4;
+  color: #ad805e;
+}
+
+.empty-state-icon svg {
+  width: 34px;
+  height: 34px;
+}
+
+.empty-state-title {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #4a4a4a;
+
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.empty-state-text {
+  margin: 18px 0 30px;
+
+  font-size: 16px;
+  line-height: 1.9;
+  color: #8b8179;
+}
+
+.empty-state-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 14px 26px;
+
+  border-radius: 9px;
+  background: #a8876d;
+
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+
+  transition: background 0.2s ease;
+}
+
+.empty-state-button:hover {
+  background: #8f6f56;
+}
+
+/* ==============================
+   Responsive
+============================== */
+
+/* 노트북: 4열 */
+@media (max-width: 1439px) {
+  .favorite-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* 태블릿: 3열 */
+@media (max-width: 1023px) {
+  .favorite-main {
+    padding: 48px 32px 80px;
+  }
+
+  .favorite-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px 20px;
+  }
+}
+
+/* 모바일: 2열 */
+@media (max-width: 767px) {
+  .favorite-main {
+    padding: 32px 20px 60px;
+  }
+
+  .favorite-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .favorite-title {
+    font-size: 28px;
+  }
+
+  .favorite-description {
+    font-size: 14px;
+  }
+
+  .favorite-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 14px;
+  }
+
+  .book-cover {
+    border-radius: 9px;
+  }
+
+  .book-info {
+    padding: 12px 2px 0;
+  }
+
+  .book-title {
+    font-size: 15px;
+    padding-right: 24px;
+  }
+
+  .book-author {
+    font-size: 12px;
+  }
+
+  .book-genre {
+    font-size: 12px;
+  }
+
+  .heart-button {
+    width: 28px;
+    height: 28px;
+    top: calc(100% - 62px);
+  }
+
+  .heart-button svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .empty-state {
+    min-height: 360px;
+    margin-top: 30px;
+  }
+
+  .empty-state-icon {
+    width: 70px;
+    height: 70px;
+  }
+
+  .empty-state-title {
+    font-size: 21px;
+  }
+
+  .empty-state-text {
+    font-size: 14px;
+  }
 }
