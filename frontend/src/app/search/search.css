@@ -4,7 +4,7 @@
 
 .search-page {
   min-height: calc(100vh - 72px);
-  background: #fff;
+  background: transparent;
 }
 
 .search-page-inner {
@@ -27,8 +27,8 @@
 }
 
 .close-button {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
 
   display: flex;
   align-items: center;
@@ -42,7 +42,7 @@
   background: transparent;
 
   color: #222;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 300;
   line-height: 1;
 
@@ -89,7 +89,7 @@
   */
   padding: 0 104px 0 20px;
 
-  border: 1px solid #aaa;
+  border: 2px solid #a89582;
   border-radius: 12px;
 
   background: #fff;
@@ -311,6 +311,8 @@
   font-size: 0.85rem;
 
   cursor: pointer;
+
+  margin-right: 10px;
 }
 
 .recent-search-heading > button:hover {
@@ -332,19 +334,30 @@
   justify-content: space-between;
 
   gap: 16px;
+
+  padding: 0 14px;
+
+  border-bottom: 1px solid #e8e2d5;
+  border-radius: 6px;
+
+  transition: background-color 0.2s ease;
+}
+
+.recent-search-list li:hover {
+  background: #f5f0e5;
 }
 
 .recent-keyword {
   flex: 1;
 
-  padding: 10px 0;
+  padding: 16px 0;
 
   border: 0;
   background: transparent;
 
   color: #333;
 
-  font-size: 0.95rem;
+  font-size: 1rem;
   text-align: left;
 
   cursor: pointer;
@@ -375,7 +388,7 @@
 }
 
 .recent-delete:hover {
-  background: #f4f4f4;
+  background: #e8e2d5;
 }
 
 .empty-recent {
@@ -428,16 +441,12 @@
     늘어나지 않게 최대 카드 폭 제한
   */
   grid-template-columns:
-    repeat(
-      auto-fill,
-      minmax(160px, 220px)
-    );
+    repeat(6, minmax(0, 1fr));
 
   justify-content: start;
 
-  gap:
-    clamp(30px, 4vw, 52px)
-    clamp(16px, 2.5vw, 30px);
+  column-gap: 24px;
+  row-gap: 36px;
 }
 
 
@@ -451,13 +460,27 @@
 
   padding: 0;
 
-  border: 0;
-  background: transparent;
+  display: flex;
+  flex-direction: column;
 
+  border: 1px solid rgba(100, 85, 70, 0.08);
+  border-radius: 14px;
+
+  background: #fff;
   color: inherit;
   text-align: left;
 
+  overflow: hidden;
   cursor: pointer;
+
+  /* 카드 그림자 */
+  box-shadow:
+    0 3px 8px rgba(70, 55, 40, 0.06),
+    0 8px 20px rgba(70, 55, 40, 0.1);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .search-result-poster {
@@ -466,7 +489,7 @@
 
   overflow: hidden;
 
-  border-radius: 10px;
+  border-radius: 0;
 
   background: #eee;
 }
@@ -482,9 +505,13 @@
   transition: transform 0.25s ease;
 }
 
-.search-result-card:hover
-  .search-result-poster img {
-  transform: scale(1.025);
+/* 마우스를 올렸을 때 */
+.search-result-card:hover {
+  transform: translateY(-5px);
+
+  box-shadow:
+    0 6px 14px rgba(70, 55, 40, 0.1),
+    0 14px 30px rgba(70, 55, 40, 0.16);
 }
 
 
@@ -512,7 +539,11 @@
 /* 카드 정보 */
 
 .search-result-info {
-  padding-top: 11px;
+  flex: 1;
+
+  padding: 14px 14px 16px;
+
+  background: #fff;
 }
 
 .search-result-info h3 {
@@ -612,11 +643,8 @@ separator만 흐리게 처리
   }
 
   .search-result-grid {
-    grid-template-columns:
-      repeat(
-        auto-fill,
-        minmax(150px, 1fr)
-      );
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 28px 18px;
   }
 }
 
@@ -687,10 +715,8 @@ separator만 흐리게 처리
   }
 
   .search-result-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-
-    gap: 28px 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 14px;
   }
 
   .search-result-info h3 {
@@ -715,7 +741,7 @@ separator만 흐리게 처리
   }
 
   .search-result-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .search-result-card {
@@ -728,7 +754,7 @@ separator만 흐리게 처리
 }
 
 .search-suggestion-item .suggestion-title .suggestion-highlight {
-  color: #ff6b35;
+  color: #e15161;
   font-weight: 700;
 }
 
