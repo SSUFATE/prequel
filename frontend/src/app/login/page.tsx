@@ -1,15 +1,11 @@
 "use client";
 
+import "./login.css";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  colors,
-  inputStyle,
-  helperTextStyle,
-  labelStyle,
-  submitButtonStyle,
-} from "@/app/lib/authStyles";
+
 import { ApiError, login as loginRequest } from "@/app/lib/api";
 import { useAuth } from "@/app/lib/authContext";
 
@@ -32,21 +28,24 @@ const ERROR_MESSAGE: Record<Exclude<LoginError, null>, string> = {
 export default function LoginPage() {
   const router = useRouter();
   const auth = useAuth();
+
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<LoginError>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const idHasError = error === "ID_REQUIRED" || error === "MISMATCH";
-  const passwordHasError = error === "PASSWORD_REQUIRED" || error === "MISMATCH";
+  const passwordHasError =
+    error === "PASSWORD_REQUIRED" || error === "MISMATCH";
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (id.trim().length === 0) {
       setError("ID_REQUIRED");
       return;
     }
+
     if (password.length === 0) {
       setError("PASSWORD_REQUIRED");
       return;
@@ -54,8 +53,10 @@ export default function LoginPage() {
 
     setError(null);
     setIsSubmitting(true);
+
     try {
       const { access_token } = await loginRequest(id.trim(), password);
+
       auth.login(access_token);
       router.push("/");
     } catch (err) {
@@ -76,52 +77,28 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#FFFFFF" }}>
-      <header
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "20px 32px",
-          borderBottom: `1px solid ${colors.border}`,
-        }}
-      >
-        <span style={{ fontSize: 20, fontWeight: 700, color: colors.textPrimary }}>Prequel</span>
-        <nav style={{ display: "flex", gap: 20, fontSize: 14 }}>
-          <Link href="/signup" style={{ color: colors.textSecondary }}>
-            회원가입
-          </Link>
-          <Link href="/login" style={{ color: colors.textPrimary, fontWeight: 600 }}>
-            로그인
-          </Link>
-        </nav>
-      </header>
+    <main className="login-page">
+      <section className="login-card">
+        <div className="login-heading">
+          <h1>Prequel</h1>
 
-      <main
-        style={{
-          maxWidth: 400,
-          margin: "0 auto",
-          padding: "56px 24px 80px",
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: colors.textPrimary, marginBottom: 10 }}>
-            Prequel
-          </h1>
-          <p style={{ fontSize: 14, color: colors.textSecondary }}>
-            K콘텐츠로 한국 문학을 탐색해보세요!
+          <p>
+            좋아하는 K-콘텐츠에서
+            <br />
+            새로운 한국 문학을 발견해보세요.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 16 }}>
-            <label style={labelStyle} htmlFor="id">
-              아이디
-            </label>
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="login-field">
+            <label htmlFor="id">아이디</label>
+
             <input
               id="id"
-              style={inputStyle(idHasError ? "error" : "default")}
-              placeholder="아이디"
+              type="text"
+              autoComplete="username"
+              className={idHasError ? "login-input error" : "login-input"}
+              placeholder="아이디를 입력해주세요"
               value={id}
               onChange={(e) => {
                 setId(e.target.value);
@@ -130,15 +107,17 @@ export default function LoginPage() {
             />
           </div>
 
-          <div style={{ marginBottom: 10 }}>
-            <label style={labelStyle} htmlFor="password">
-              비밀번호
-            </label>
+          <div className="login-field">
+            <label htmlFor="password">비밀번호</label>
+
             <input
               id="password"
               type="password"
-              style={inputStyle(passwordHasError ? "error" : "default")}
-              placeholder="비밀번호"
+              autoComplete="current-password"
+              className={
+                passwordHasError ? "login-input error" : "login-input"
+              }
+              placeholder="비밀번호를 입력해주세요"
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
@@ -147,24 +126,26 @@ export default function LoginPage() {
             />
           </div>
 
-          {error && <p style={helperTextStyle("error")}>{ERROR_MESSAGE[error]}</p>}
+          {error && (
+            <p className="login-error" role="alert">
+              {ERROR_MESSAGE[error]}
+            </p>
+          )}
 
           <button
             type="submit"
-            style={{ ...submitButtonStyle(true), marginTop: 18 }}
+            className="login-submit"
             disabled={isSubmitting}
           >
             {isSubmitting ? "로그인 중..." : "로그인"}
           </button>
         </form>
 
-        <p style={{ textAlign: "center", marginTop: 24, fontSize: 13, color: colors.textSecondary }}>
+        <p className="login-signup">
           아직 회원이 아니신가요?{" "}
-          <Link href="/signup" style={{ color: colors.coral, fontWeight: 600 }}>
-            회원가입
-          </Link>
+          <Link href="/signup">회원가입</Link>
         </p>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }
