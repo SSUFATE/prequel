@@ -6,23 +6,21 @@ import { getKContents } from "@/api/kcontents";
 export default async function Home() {
   const { items: contents } = await getKContents({
     page: 1,
-    size: 6,
+    size: 8,
   });
 
   return (
     <main className="home">
       <section className="hero-section">
         <div className="hero-content">
-          <p className="hero-label">Prequel</p>
-
           <h1>
-            좋아했던 K-콘텐츠와 닮은
+            좋아하는 K-콘텐츠와 닮은
             <br className="mobile-hide" />
-            한국 문학을 만나보세요.
+            한국 문학을 만나보세요
           </h1>
 
           <p className="hero-description">
-            재미있게 본 영화나 드라마를 검색하면
+            재미있게 본 영화를 검색하면
             <br className="mobile-hide" />
             비슷한 분위기와 주제를 가진 한국 문학을 추천해드려요.
           </p>
@@ -43,11 +41,16 @@ export default async function Home() {
 
         <div className="content-grid">
           {contents.map((content) => (
-            <ContentCard
+            <Link
               key={content.content_id}
-              title={content.title}
-              image={content.poster_url ?? undefined}
-            />
+              href={`/k-contents/${content.content_id}/recommendations`}
+              className="content-card-link"
+            >
+              <ContentCard
+                title={content.title}
+                image={content.poster_url ?? undefined}
+              />
+            </Link>
           ))}
         </div>
       </section>
