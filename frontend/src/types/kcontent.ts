@@ -4,10 +4,10 @@ export interface KContent {
   content_id: number;
   title: string;
   content_type: KContentType;
-  overview: string | null;
-  platform: string | null;
+  overview?: string | null;
+  platform?: string | null;
   release_date: string;
-  poster_url: string | null;
+  poster_url?: string | null;
 }
 
 export interface KContentListResponse {
