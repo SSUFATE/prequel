@@ -43,6 +43,11 @@ class User(Base):
         index=True
     )
 
+    profile_image_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True
+    )
+
     language: Mapped[str] = mapped_column(
         String(10),
         default="ko"

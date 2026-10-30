@@ -61,6 +61,9 @@ def update_user(db: Session, db_user: User, user_update: UserUpdate):
         )
 
     for field, value in update_data.items():
+        if field == "language" and value is not None:
+            value = value.value
+
         setattr(db_user, field, value)
 
     db.commit()
@@ -72,4 +75,31 @@ def update_user(db: Session, db_user: User, user_update: UserUpdate):
 def delete_user(db: Session, db_user: User):
     db.delete(db_user)
     db.commit()
+    return db_user
+
+
+# 프로필 이미지 경로 수정
+def update_profile_image(
+    db: Session,
+    db_user: User,
+    image_url: str | None
+):
+    db_user.profile_image_url = image_url
+
+    db.commit()
+    db.refresh(db_user)
+
+    return db_user
+
+
+# 프로필 이미지 삭제
+def delete_profile_image(
+    db: Session,
+    db_user: User
+):
+    db_user.profile_image_url = None
+
+    db.commit()
+    db.refresh(db_user)
+
     return db_user

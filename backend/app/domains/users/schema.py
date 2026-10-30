@@ -30,6 +30,7 @@ class UserResponse(BaseModel):
     login_id: str
     username: str
     email: EmailStr
+    profile_image_url: str | None = None
     language: Language
     role: UserRole
     is_active: bool
@@ -54,3 +55,7 @@ class UserUpdate(BaseModel):
 #
 class MessageResponse(BaseModel):
     message: str
+
+# 회원탈퇴 요청
+class UserDeleteRequest(BaseModel):
+    password: str
