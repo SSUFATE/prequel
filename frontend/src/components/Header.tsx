@@ -1,11 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/app/lib/authContext";
 import { getAccessToken, logout as apiLogout } from "@/app/lib/api";
 
 export default function Header() {
   const { isLoggedIn, isLoading, logout } = useAuth();
+
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   async function handleLogout() {
     const token = getAccessToken();
@@ -20,10 +35,11 @@ export default function Header() {
 
   if (isLoading) {
     return (
-      <header className="site-header">
+      <header className={`site-header ${scrolled ? "scrolled" : ""}`}>
         <div className="header-inner">
           <Link href="/" className="logo">
-            Prequel
+            <span className="logo-icon" aria-hidden="true">📚</span>
+            <span>Prequel</span>
           </Link>
           <nav className="header-nav" />
         </div>
@@ -32,10 +48,13 @@ export default function Header() {
   }
 
   return (
-    <header className="site-header">
+    <header className={`site-header ${scrolled ? "scrolled" : ""}`}>
       <div className="header-inner">
         <Link href="/" className="logo">
-          Prequel
+          <span className="logo-icon" aria-hidden="true">
+            📚
+          </span>
+          <span>Prequel</span>
         </Link>
 
         <nav className="header-nav">
