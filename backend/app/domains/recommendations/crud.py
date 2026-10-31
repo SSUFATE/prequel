@@ -31,13 +31,13 @@ def get_content_tags(
 
 
 # 전체/테마별 문학 작품 순위
-def get_scored_literatures(
+def get_tag_scored_literatures(
     db: Session,
     content_id: int,
-    limit: int,
-    category: TagCategory | None = None
+    limit: int = 5,
+    category: TagCategory | None = None,
+    work_ids: list[int] | None = None,
 ):
-    # 공통 태그의 가중치를 곱한 뒤 작품별로 합산
     score_expression = func.sum(
         KContentTag.weight * LiteraryWorkTag.weight
     )
@@ -47,49 +47,50 @@ def get_scored_literatures(
             LiteraryWork,
             score_expression.label("raw_score")
         )
-        # LiteraryWork와 LiteraryWorkTag 연결
         .join(
             LiteraryWorkTag,
-            LiteraryWork.work_id 
-            == LiteraryWorkTag.work_id,
+            LiteraryWork.work_id == LiteraryWorkTag.work_id,
         )
-        # 같은 tag_id를 가진 KContentTag 연결
         .join(
             KContentTag,
             and_(
-                LiteraryWorkTag.tag_id 
-                == KContentTag.tag_id,
-
-                KContentTag.content_id 
-                == content_id,
-            )     
+                LiteraryWorkTag.tag_id == KContentTag.tag_id,
+                KContentTag.content_id == content_id,
+            )
         )
-        # 태그 카테고리 확인을 위해 Tag 연결
         .join(
             Tag,
             Tag.tag_id == LiteraryWorkTag.tag_id
         )
     )
 
-    # 특정 테마가 선택된 경우 해당 테마만 사용
     if category is not None:
         query = query.filter(
             Tag.category == category.value
         )
-    
-    scored_works = (
+
+    if work_ids is not None:
+        if not work_ids:
+            return []
+
+        query = query.filter(
+            LiteraryWork.work_id.in_(work_ids)
+        )
+
+    query = (
         query
-        .group_by(
-            LiteraryWork.work_id
-        )
+        .group_by(LiteraryWork.work_id)
         .order_by(
-            score_expression.desc()
+            score_expression.desc(),
+            LiteraryWork.work_id.asc(),
         )
-        .limit(limit)
-        .all()    
     )
 
-    return scored_works
+    # 후보 ID가 주어지면 해당 후보의 점수를 모두 조회
+    if work_ids is None:
+        query = query.limit(limit)
+
+    return query.all()
 
 
 # 콘텐츠와 추천 문학작품의 공통 태그 조회
@@ -224,18 +225,34 @@ def get_embedding_scored_literatures(
     db: Session,
     content_embedding,
     limit: int = 5,
+    work_ids: list[int] | None = None,
 ):
     distance = LiteraryWork.embedding.cosine_distance(
         content_embedding
     )
 
-    return (
+    query = (
         db.query(
             LiteraryWork,
             (1 - distance).label("embedding_score"),
         )
         .filter(LiteraryWork.embedding.is_not(None))
-        .order_by(distance)
-        .limit(limit)
-        .all()
     )
+
+    if work_ids is not None:
+        if not work_ids:
+            return []
+
+        query = query.filter(
+            LiteraryWork.work_id.in_(work_ids)
+        )
+
+    query = query.order_by(
+        distance,
+        LiteraryWork.work_id.asc(),
+    )
+
+    if work_ids is None:
+        query = query.limit(limit)
+
+    return query.all()

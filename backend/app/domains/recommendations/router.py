@@ -155,3 +155,40 @@ def get_kcontent_embedding_recommendations(
         "content_title": kcontent.title,
         "recommendations": recommendations,
     }
+
+
+# 태그 + 임베딩 하이브리드 추천
+@router.get(
+    "/{content_id}/hybrid-recommendations",
+    response_model=RecommendationListResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_kcontent_hybrid_recommendations(
+    content_id: int,
+    limit: int = Query(
+        default=5,
+        ge=1,
+        le=20,
+    ),
+    db: Session = Depends(get_db),
+):
+    # 1. 콘텐츠 존재 여부 확인
+    kcontent = get_kcontent_by_id(
+        db=db,
+        content_id=content_id,
+    )
+
+    # 2. 하이브리드 추천 결과 생성
+    recommendations = (
+        service.get_hybrid_recommendations_by_content_id(
+            db=db,
+            content_id=content_id,
+            limit=limit,
+        )
+    )
+
+    return {
+        "content_id": kcontent.content_id,
+        "content_title": kcontent.title,
+        "recommendations": recommendations,
+    }

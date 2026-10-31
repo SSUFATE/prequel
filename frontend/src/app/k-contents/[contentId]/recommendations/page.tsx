@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 
@@ -92,9 +93,14 @@ export default function RecommendationPage() {
 
         setRecommendations(data.recommendations);
       } catch (error) {
-        console.error("추천 목록 조회 실패:", error);
-        setRecommendations([]);
-        setError("추천 작품을 불러오지 못했어요.");
+        if (axios.isAxiosError(error)) {
+        console.log("요청 URL:", error.config?.url);
+        console.log("상태 코드:", error.response?.status);
+        console.log("에러 내용:", error.response?.data);
+      }
+
+  setRecommendations([]);
+  setError("추천 작품을 불러오지 못했어요.");
       } finally {
         setIsRecommendationsLoading(false);
       }
@@ -336,10 +342,29 @@ export default function RecommendationPage() {
                   className="recommendation-card"
                   onClick={() =>
                     router.push(
-                      `/k-contents/${contentId}/recommendations/${item.work_id}`
+                      `/k-contents/${contentId}/recommendations/${item.work_id}${
+                        selectedTheme === "ALL"
+                        ? ""
+                        : `?category=${selectedTheme}`
+                      }`
                     )
                   }
                 >
+                  <div className="recommendation-card-top">
+                    <span className="similarity-badge">
+                      {Math.round(item.similarity_score * 100)}% 유사
+                    </span>
+
+                    <button
+                      type="button"
+                      className={`favorite-button ${isFav ? "active" : ""}`}
+                      aria-label={`${item.title} ${isFav ? "찜 해제" : "찜하기"}`}
+                      aria-pressed={isFav}
+                      onClick={(e) => handleToggleFavorite(e, item)}
+                    >
+                      <HeartIcon filled={isFav} />
+                    </button>
+                  </div>
                   <div className="literature-poster">
                     {item.cover_url ? (
                       <img src={item.cover_url} alt={`${item.title} 표지`} />
@@ -368,10 +393,6 @@ export default function RecommendationPage() {
                           )}
                         </p>
                       </div>
-
-                      <span className="similarity-badge">
-                        {Math.round(item.similarity_score * 100)}% 유사
-                      </span>
                     </div>
 
                     {item.summary && (
@@ -384,16 +405,6 @@ export default function RecommendationPage() {
                       ))}
                     </div>
                   </div>
-
-                  <button
-                    type="button"
-                    className={`favorite-button ${isFav ? "active" : ""}`}
-                    aria-label={`${item.title} ${isFav ? "찜 해제" : "찜하기"}`}
-                    aria-pressed={isFav}
-                    onClick={(e) => handleToggleFavorite(e, item)}
-                  >
-                    <HeartIcon filled={isFav} />
-                  </button>
                 </article>
               );
             })}

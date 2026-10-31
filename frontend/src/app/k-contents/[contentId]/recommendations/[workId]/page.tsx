@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import "./literature-detail.css";
 import {
   getMyFavoriteWorks,
@@ -139,6 +140,13 @@ export default function LiteratureDetailPage({
 }) {
   const resolvedParams = use(params);
   const { contentId, workId } = resolvedParams;
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("category");
+
+  const selectedCategory: TagCategory | null =
+    CATEGORY_ORDER.includes(categoryParam as TagCategory)
+      ? (categoryParam as TagCategory)
+      : null;
 
   const [activeTab, setActiveTab] = useState<TabId>("intro");
   const [liked, setLiked] = useState(false);
@@ -257,7 +265,12 @@ export default function LiteratureDetailPage({
     );
   }
 
-  const matchPercent = Math.round((recommendation.similarity_score ?? 0) * 100);
+  const matchScore = selectedCategory
+    ? (recommendation.category_scores?.[selectedCategory] ?? 0)
+    : recommendation.similarity_score;
+
+  const matchPercent = Math.round(matchScore * 100);
+
   const { heading: matchHeading, description: matchDescription } = buildRecommendationCopy(
     recommendation.category_scores ?? {},
     recommendation.literature_tags ?? []
@@ -350,7 +363,9 @@ export default function LiteratureDetailPage({
                 <section className="similarity-section">
                   <div className="similarity-box">
                     <h2 className="section-label">
-                      K-콘텐츠와의 유사도
+                      {selectedCategory
+                        ? `${CATEGORY_LABELS[selectedCategory]} 유사도`
+                        : "종합 유사도"}
                     </h2>
                     <div className="similarity-box-content">
                       <DonutChart percent={matchPercent} />
