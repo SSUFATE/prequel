@@ -23,3 +23,21 @@ export interface KContentListParams {
   page?: number;
   size?: number;
 }
+
+export interface HomeContent {
+  content_id: number;
+  title: string;
+  poster_url: string | null;
+  release_date: string | null;
+}
+
+export interface HomeSection {
+  key: string;
+  title: string;
+  type: string;
+  contents: HomeContent[];
+}
+
+export interface HomeSectionsResponse {
+  sections: HomeSection[];
+}

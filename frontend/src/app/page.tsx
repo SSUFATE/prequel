@@ -1,13 +1,11 @@
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import ContentCard from "@/components/ContentCard";
-import { getKContents } from "@/api/kcontents";
+import { getHomeSections } from "@/api/kcontents";
+import ContentSlider from "@/components/ContentSlider";
 
 export default async function Home() {
-  const { items: contents } = await getKContents({
-    page: 1,
-    size: 8,
-  });
+  const { sections } = await getHomeSections();
 
   return (
     <main className="home">
@@ -29,31 +27,19 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="popular-section">
-        <div className="section-heading">
-          <h2>지금 많이 찾는 K 콘텐츠</h2>
+      {/* 장르·개봉 연도별 콘텐츠 섹션 */}
+      {sections.map((section) => (
+        <section
+          key={section.key}
+          className="popular-section"
+        >
+          <div className="section-heading">
+            <h2>{section.title}</h2>
+          </div>
 
-          <Link href="/search" className="more-link">
-            더 보기
-            <span>›</span>
-          </Link>
-        </div>
-
-        <div className="content-grid">
-          {contents.map((content) => (
-            <Link
-              key={content.content_id}
-              href={`/k-contents/${content.content_id}/recommendations`}
-              className="content-card-link"
-            >
-              <ContentCard
-                title={content.title}
-                image={content.poster_url ?? undefined}
-              />
-            </Link>
-          ))}
-        </div>
-      </section>
+          <ContentSlider contents={section.contents} />
+        </section>
+      ))}
     </main>
   );
 }

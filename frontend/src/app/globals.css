@@ -306,7 +306,12 @@ input {
 ========================= */
 
 .popular-section {
-  padding: 80px 0 80px;
+  padding: 24px 48px;
+}
+
+/* 히어로 바로 아래 첫 번째 섹션 */
+.hero-section + .popular-section {
+  padding-top: 48px;
 }
 
 .section-heading {
@@ -346,18 +351,26 @@ input {
 ========================= */
 
 .content-grid {
-  display: grid;
+  display: flex;
+  gap: 20px;
 
-  grid-template-columns:
-    repeat(
-      auto-fill,
-      minmax(min(150px, 100%), 1fr)
-    );
+  overflow-x: auto;
+  overflow-y: hidden;
 
-  column-gap: 20px;
-  row-gap: 28px;
+  padding: 12px 4px 24px;
 
-  padding: 4px 2px 20px;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.content-grid::-webkit-scrollbar {
+  display: none;
+}
+
+/* 카드 크기 고정 */
+.content-card-link {
+  flex: 0 0 176px;
+  min-width: 0;
 }
 
 
@@ -408,6 +421,72 @@ input {
   height: 100%;
 }
 
+
+/* 슬라이더 전체 */
+.content-slider {
+  position: relative;
+  width: 100%;
+}
+
+/* 화살표 공통 */
+.slider-arrow {
+  position: absolute;
+  top: 45%;
+  transform: translateY(-50%);
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 56px;
+  padding: 0;
+
+  background: rgba(245, 235, 220, 0.9);
+  color: #806650;
+
+  border: 1px solid #d8c5b0;
+  border-radius: 8px;
+
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.slider-arrow:hover {
+  background: #e8d6c0;
+  color: #604632;
+}
+
+/* 왼쪽 화살표 */
+.slider-arrow-left {
+  left: -44px;
+}
+
+/* 오른쪽 화살표 */
+.slider-arrow-right {
+  right: -44px;
+}
+
+/* 카드 가로 스크롤 */
+.content-slider .content-grid {
+  display: flex;
+  gap: 20px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.content-slider .content-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.content-slider .content-card-link {
+  flex: 0 0 176px;
+}
 
 /* =========================
    Poster
@@ -537,5 +616,22 @@ input {
   .content-card h3 {
     padding: 12px;
     font-size: 0.9rem;
+  }
+
+  .popular-section {
+    padding: 24px 20px;
+  }
+
+  .slider-arrow-left {
+    left: -18px;
+  }
+
+  .slider-arrow-right {
+    right: -18px;
+  }
+
+  .slider-arrow {
+    width: 30px;
+    height: 48px;
   }
 }
