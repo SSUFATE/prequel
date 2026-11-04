@@ -2,8 +2,9 @@
 
 from app.domains.kcontents.crud import (
     get_kcontents,
-    get_kcontent_by_id
+    get_kcontent_by_id,
 )
+from app.domains.kcontents.service import get_home_sections
 from app.database import get_db
 from fastapi import APIRouter, Depends, Query, status, HTTPException
 from app.domains.kcontents.schema import (
@@ -51,6 +52,14 @@ def read_kcontents(
         page=page,
         size=size
     )
+
+
+# 홈 화면 -> 섹션별 영화 조회
+@router.get("/home")
+def get_home_kcontents(
+    db: Session = Depends(get_db),
+):
+    return get_home_sections(db=db)
 
 
 # content_id로 K콘텐츠 조회

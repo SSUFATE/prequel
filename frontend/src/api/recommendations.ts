@@ -2,22 +2,22 @@ import axiosInstance from "./axiosInstance";
 import type { 
   RecommendationResponse,
   RecommendationParams,
-  TagCategory
 } from "@/types/recommendation";
 
 export const getRecommendations = async (
   contentId: number,
   params: RecommendationParams = {}
 ): Promise<RecommendationResponse> => {
-  console.log("contentId:", contentId);
-  console.log("category:", params.category);
-  console.log("limit:", params.limit);
+  const endpoint = params.category
+    ? `/api/v1/k-contents/${contentId}/recommendations?category=${params.category}&limit=${params.limit ?? 20}`
+    : `/api/v1/k-contents/${contentId}/hybrid-recommendations`;
+
   const response = await axiosInstance.get<RecommendationResponse>(
-    `/api/v1/k-contents/${contentId}/recommendations`,
+    endpoint,
     {
       params: {
         limit: params.limit ?? 20,
-        category: params.category,
+        ...(params.category && { category: params.category }),
       },
     }
   );

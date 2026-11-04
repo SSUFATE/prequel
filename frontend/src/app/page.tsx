@@ -1,28 +1,24 @@
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import ContentCard from "@/components/ContentCard";
-import { getKContents } from "@/api/kcontents";
+import { getHomeSections } from "@/api/kcontents";
+import ContentSlider from "@/components/ContentSlider";
 
 export default async function Home() {
-  const { items: contents } = await getKContents({
-    page: 1,
-    size: 6,
-  });
+  const { sections } = await getHomeSections();
 
   return (
     <main className="home">
       <section className="hero-section">
         <div className="hero-content">
-          <p className="hero-label">Prequel</p>
-
           <h1>
-            좋아했던 K-콘텐츠와 닮은
+            좋아하는 K-콘텐츠와 닮은
             <br className="mobile-hide" />
-            한국 문학을 만나보세요.
+            한국 문학을 만나보세요
           </h1>
 
           <p className="hero-description">
-            재미있게 본 영화나 드라마를 검색하면
+            재미있게 본 영화를 검색하면
             <br className="mobile-hide" />
             비슷한 분위기와 주제를 가진 한국 문학을 추천해드려요.
           </p>
@@ -31,26 +27,19 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="popular-section">
-        <div className="section-heading">
-          <h2>지금 많이 찾는 K 콘텐츠</h2>
+      {/* 장르·개봉 연도별 콘텐츠 섹션 */}
+      {sections.map((section) => (
+        <section
+          key={section.key}
+          className="popular-section"
+        >
+          <div className="section-heading">
+            <h2>{section.title}</h2>
+          </div>
 
-          <Link href="/search" className="more-link">
-            더 보기
-            <span>›</span>
-          </Link>
-        </div>
-
-        <div className="content-grid">
-          {contents.map((content) => (
-            <ContentCard
-              key={content.content_id}
-              title={content.title}
-              image={content.poster_url ?? undefined}
-            />
-          ))}
-        </div>
-      </section>
+          <ContentSlider contents={section.contents} />
+        </section>
+      ))}
     </main>
   );
 }

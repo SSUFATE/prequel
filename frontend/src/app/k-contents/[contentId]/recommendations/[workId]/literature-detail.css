@@ -1,24 +1,33 @@
+/* ========================================
+   Literature Detail - Book-Tori
+======================================== */
+
 .detail-page {
   min-height: 100vh;
-  background: #f7f7f8;
+  background: #fffdf2;
   color: #1a1a1a;
+  font-family: inherit;
 }
 
-/* ---------- Header ---------- */
+/* ========================================
+   Header
+======================================== */
 
 .detail-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   height: 64px;
   padding: 0 32px;
+
   background: #ffffff;
   border-bottom: 1px solid #eaeaea;
 }
 
 .detail-logo {
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: #1a1a1a;
   text-decoration: none;
@@ -31,95 +40,142 @@
 }
 
 .detail-nav-link {
-  background: none;
-  border: none;
   padding: 0;
+  border: none;
+  background: transparent;
+
   font-size: 14px;
   color: #6b6b6b;
-  cursor: pointer;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .detail-icon-button {
   display: flex;
   align-items: center;
   justify-content: center;
+
   width: 28px;
   height: 28px;
+  padding: 0;
+
   border: none;
-  background: none;
+  background: transparent;
+
   color: #1a1a1a;
   cursor: pointer;
-  padding: 0;
 }
 
-/* ---------- Body layout ---------- */
+/* ========================================
+   Layout
+======================================== */
 
 .detail-body {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  max-width: 960px;
+
+  width: 100%;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 40px 32px 80px;
 }
+
+.detail-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+
+  width: 100%;
+  min-width: 0;
+  gap: 28px;
+}
+
+.detail-card {
+  min-width: 0;
+  padding: 40px;
+
+  background: #ffffff;
+  border: 1px solid #eef0f2;
+  border-radius: 14px;
+}
+
+.detail-divider {
+  margin: 32px 0;
+  border: none;
+  border-top: 1px solid #eef0f2;
+}
+
+/* ========================================
+   Back Button
+======================================== */
 
 .detail-back-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  margin-top: 32px;
+
+  width: 40px;
+  height: 40px;
+  padding: 0;
+
   border: none;
-  background: none;
+  background: transparent;
+  box-shadow: none;
+
   color: #1a1a1a;
   cursor: pointer;
-  padding: 0;
   flex-shrink: 0;
 }
 
-.detail-content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+.detail-back-button:hover {
+  color: #8b6246;
 }
 
-.detail-card {
-  background: #ffffff;
-  border-radius: 10px;
-  border: 1px solid #eef0f2;
-  padding: 32px;
+.detail-back-button:focus-visible {
+  outline: 2px solid #8b6246;
+  outline-offset: 2px;
 }
 
-.detail-divider {
-  border: none;
-  border-top: 1px solid #eef0f2;
-  margin: 28px 0;
-}
-
-/* ---------- Overview ---------- */
+/* ========================================
+   Overview
+======================================== */
 
 .detail-overview {
   display: flex;
+  align-items: flex-start;
   gap: 32px;
 }
 
+/* Book Cover */
+
 .detail-cover {
   position: relative;
-  width: 168px;
-  aspect-ratio: 3 / 4.2;
-  border-radius: 4px;
-  overflow: hidden;
-  padding: 16px 14px;
+
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
+
+  flex: 0 0 168px;
+  width: 168px;
+  aspect-ratio: 3 / 4.2;
+
+  padding: 16px 14px;
+  overflow: hidden;
+
+  border-radius: 4px;
+
   background:
-    radial-gradient(120% 90% at 100% 0%, rgba(255, 255, 255, 0.08), transparent 60%),
-    linear-gradient(160deg, #2a3a72 0%, #202c5c 55%, #171f45 100%);
+    radial-gradient(
+      120% 90% at 100% 0%,
+      rgba(255, 255, 255, 0.08),
+      transparent 60%
+    ),
+    linear-gradient(
+      160deg,
+      #2a3a72 0%,
+      #202c5c 55%,
+      #171f45 100%
+    );
+
   color: #ffffff;
 }
 
@@ -131,13 +187,17 @@
 
 .detail-cover-title {
   margin-top: 8px;
+
   font-size: 30px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
+
+  overflow-wrap: anywhere;
 }
 
 .detail-cover-tagline {
   margin-top: auto;
+
   font-size: 9px;
   line-height: 1.5;
   opacity: 0.75;
@@ -152,193 +212,345 @@
 .detail-cover-chip {
   flex: 1;
   height: 14px;
+
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.14);
 }
 
+/* ========================================
+   Book Information
+======================================== */
+
 .detail-info {
-  flex: 1;
-  min-width: 0;
   display: flex;
+  flex: 1;
   flex-direction: column;
+  min-width: 0;
 }
 
 .detail-info-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+
+  gap: 24px;
+  min-width: 0;
+}
+
+.detail-info-header > :first-child {
+  min-width: 0;
 }
 
 .detail-title {
   margin: 0;
-  font-size: 22px;
-  font-weight: 800;
+
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
 }
 
 .detail-subtitle {
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: #8b8b8b;
+  margin: 8px 0 0;
+
+  font-size: 15px;
+  line-height: 1.6;
+  color: #777777;
 }
 
+/* ========================================
+   Favorite Heart
+======================================== */
+
 .heart-button-lg {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+
+  flex: 0 0 44px;
+
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+
   border: none;
-  background: none;
-  color: #c7c7c7;
+  border-radius: 50%;
+  background: transparent;
+
+  color: #8b6246;
   cursor: pointer;
-  padding: 0;
+
+  line-height: 1;
+  overflow: visible;
+}
+
+.heart-button-lg svg {
+  display: block;
+
+  width: 24px;
+  height: 24px;
+
   flex-shrink: 0;
+  overflow: visible;
+}
+
+.heart-button-lg:hover {
+  background: #f3e8da;
+}
+
+.heart-button-lg:focus-visible {
+  outline: 2px solid #8b6246;
+  outline-offset: 2px;
 }
 
 .heart-button-lg--active {
-  color: #ff5a5f;
+  color: #c97e5c;
 }
 
-/* ---------- Similarity box ---------- */
+.heart-button-lg:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+/* ========================================
+   Similarity
+======================================== */
 
 .section-label {
-  margin: 0 0 14px;
-  font-size: 14px;
-  font-weight: 700;
+  margin: 0 0 18px;
+
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .similarity-section {
-  margin-top: 24px;
+  margin-top: 28px;
 }
+
+/* Single Similarity Box */
 
 .similarity-box {
   display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 20px 24px;
-  border-radius: 8px;
-  background: #fdf1e9;
+  flex-direction: column;
+  align-items: stretch;
+
+  gap: 22px;
+  padding: 28px 32px;
+
+  background: #faf6f1;
+  border: 1px solid #e8ddd1;
+  border-radius: 12px;
 }
+
+/* Title Inside Similarity Box */
+
+.similarity-box .section-label {
+  margin: 0;
+
+  font-size: 18px;
+  font-weight: 700;
+  color: #3c3028;
+}
+
+/* Donut + Recommendation Text */
+
+.similarity-box-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  gap: 28px;
+  padding: 0;
+  margin: 0;
+
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Donut Chart */
 
 .donut-chart {
   position: relative;
+
+  flex: 0 0 104px;
   width: 104px;
   height: 104px;
-  flex-shrink: 0;
+}
+
+.donut-chart svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .donut-chart-label {
   position: absolute;
   inset: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  font-weight: 800;
-  color: #ff6a3d;
+
+  font-size: 22px;
+  font-weight: 700;
+  color: #b87953;
+}
+
+/* Recommendation Text */
+
+.similarity-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .similarity-heading {
-  margin: 0 0 6px;
-  font-size: 14px;
-  font-weight: 700;
+  margin: 0 0 8px;
+
+  font-size: 15px;
+  font-weight: 600;
+  color: #a18b79;
 }
 
 .similarity-desc {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #6b6b6b;
+
+  font-size: 15px;
+  line-height: 1.8;
+  color: #655b53;
 }
 
-/* ---------- Reasons ---------- */
+/* ========================================
+   Recommendation Reasons
+======================================== */
 
 .reason-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+
+  column-gap: 72px;
+  row-gap: 32px;
+}
+
+.reason-grid > * {
+  min-width: 0;
 }
 
 .reason-subtitle {
-  margin: 0 0 16px;
-  font-size: 13px;
+  margin: 0 0 20px;
+
+  font-size: 16px;
   font-weight: 700;
-  color: #4a4a4a;
+  color: #493a30;
 }
 
+/* ========================================
+   Theme Similarity Bars
+======================================== */
+
 .theme-bar-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .theme-bar-row {
   display: grid;
-  grid-template-columns: 64px 1fr 34px;
+  grid-template-columns:
+    72px
+    minmax(0, 1fr)
+    40px;
+
   align-items: center;
   gap: 12px;
+
+  max-width: 520px;
 }
 
 .theme-bar-label {
-  font-size: 12px;
-  color: #4a4a4a;
+  font-size: 14px;
+  color: #655b53;
+  white-space: nowrap;
 }
 
 .theme-bar-track {
-  height: 6px;
-  border-radius: 3px;
-  background: #f1e4dc;
+  height: 8px;
+
   overflow: hidden;
+  border-radius: 999px;
+  background: #eee5dc;
 }
 
 .theme-bar-fill {
   height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(90deg, #ff6a3d, #ff9466);
+  border-radius: inherit;
+  background: #b98b6d;
 }
 
 .theme-bar-value {
-  font-size: 12px;
+  font-size: 14px;
   color: #8b8b8b;
   text-align: right;
 }
 
+/* ========================================
+   Keywords
+======================================== */
+
 .keyword-tags {
   display: flex;
   flex-wrap: wrap;
+
   gap: 8px;
   margin-bottom: 16px;
 }
 
 .keyword-tag {
-  font-size: 12px;
-  padding: 6px 12px;
+  padding: 8px 14px;
+
   border-radius: 999px;
+
+  font-size: 14px;
   white-space: nowrap;
 }
 
+/* Shared Keywords */
+
 .keyword-tag--shared {
-  background: #e8f1ff;
-  color: #3f7de0;
+  background: #eaf1fa;
+  color: #567ca7;
 }
+
+/* Literature Unique Keywords */
 
 .keyword-tag--unique {
-  background: #fdece2;
-  color: #e4602e;
+  background: #f5eae1;
+  color: #a97857;
 }
 
+/* ========================================
+   Keyword Legend
+======================================== */
+
 .keyword-legend {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 12px;
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  font-size: 13px;
   color: #8b8b8b;
 }
 
@@ -349,108 +561,156 @@
 }
 
 .legend-dot {
+  flex: 0 0 8px;
+
   width: 8px;
   height: 8px;
+
   border-radius: 50%;
 }
 
 .legend-dot--shared {
-  background: #7bafff;
+  background: #83a8d6;
 }
 
 .legend-dot--unique {
-  background: #ffb08e;
+  background: #c99b7c;
 }
 
-/* ---------- Tabs ---------- */
+/* ========================================
+   Tabs
+======================================== */
 
 .detail-tabs {
   display: flex;
   gap: 40px;
+
+  margin: -40px -40px 32px;
+  padding: 0 40px;
+
   border-bottom: 1px solid #eef0f2;
-  margin: -32px -32px 28px;
-  padding: 0 32px;
 }
 
 .detail-tab {
-  border: none;
-  background: none;
+  flex-shrink: 0;
+
   padding: 18px 0;
-  font-size: 14px;
-  color: #8b8b8b;
-  cursor: pointer;
+
+  border: none;
   border-bottom: 2px solid transparent;
+  background: transparent;
+
+  color: #8b8b8b;
+  font-size: 16px;
+
+  cursor: pointer;
+}
+
+.detail-tab:hover {
+  color: #8b6246;
 }
 
 .detail-tab--active {
-  color: #1a1a1a;
+  color: #493a30;
   font-weight: 700;
-  border-bottom-color: #1a1a1a;
+  border-bottom-color: #8b6246;
 }
 
-/* ---------- Detail sections ---------- */
+/* ========================================
+   Detail Sections
+======================================== */
 
 .detail-section {
-  scroll-margin-top: 24px;
+  scroll-margin-top: 120px;
 }
 
 .detail-body-text {
   margin: 0 0 24px;
-  font-size: 13px;
-  line-height: 1.7;
+
+  font-size: 16px;
+  line-height: 1.8;
   color: #4a4a4a;
 }
 
+/* ========================================
+   AI Information
+======================================== */
+
 .ai-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
   gap: 20px;
 }
 
 .ai-box-title {
   margin: 0 0 10px;
-  font-size: 13px;
-  font-weight: 700;
+
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .ai-box-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 72px;
+
+  min-height: 90px;
+  padding: 16px;
+
   border-radius: 8px;
   background: #f5f5f6;
-  color: #b0b0b0;
-  font-size: 12px;
+
+  color: #a0a0a0;
+  font-size: 14px;
   text-align: center;
-  padding: 16px;
 }
+
+/* ========================================
+   Translations
+======================================== */
 
 .translation-row {
   display: flex;
+  align-items: flex-start;
+
   gap: 24px;
+  min-width: 0;
 }
 
 .translation-thumb {
-  width: 88px;
-  height: 88px;
-  border-radius: 6px;
-  background: #e4e4e6;
-  flex-shrink: 0;
+  flex: 0 0 140px;
+
+  width: 140px;
+  height: 200px;
+
+  border-radius: 8px;
+  background: #f5f5f5;
+
+  object-fit: contain;
 }
 
 .translation-list {
-  margin: 0;
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
+
   gap: 10px;
+  min-width: 0;
+  margin: 0;
 }
 
 .translation-item {
   display: grid;
-  grid-template-columns: 96px 1fr;
-  font-size: 13px;
+  grid-template-columns:
+    110px
+    minmax(0, 1fr);
+
+  gap: 12px;
+
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 .translation-item dt {
@@ -458,34 +718,179 @@
 }
 
 .translation-item dd {
+  min-width: 0;
   margin: 0;
+
   color: #1a1a1a;
+  overflow-wrap: anywhere;
 }
 
 .translation-link {
-  color: #3f7de0;
+  color: #567ca7;
   text-decoration: none;
 }
 
+.translation-link:hover {
+  text-decoration: underline;
+}
+
+/* ========================================
+   Timeline
+======================================== */
+
 .timeline-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
   gap: 40px;
 }
 
+/* ========================================
+   Responsive - Tablet
+======================================== */
+
+@media (max-width: 900px) {
+  .detail-card {
+    padding: 30px;
+  }
+
+  .detail-tabs {
+    margin: -30px -30px 28px;
+    padding: 0 30px;
+  }
+
+  .reason-grid {
+    column-gap: 36px;
+  }
+
+  .timeline-grid {
+    gap: 24px;
+  }
+}
+
+/* ========================================
+   Responsive - Mobile
+======================================== */
+
 @media (max-width: 720px) {
+  .detail-body {
+    padding: 24px 16px 60px;
+  }
+
+  .detail-card {
+    padding: 24px 20px;
+  }
+
   .detail-overview {
     flex-direction: column;
+    gap: 24px;
   }
+
+  .detail-cover {
+    flex-basis: auto;
+  }
+
+  .detail-info {
+    width: 100%;
+  }
+
+  .detail-info-header {
+    gap: 12px;
+  }
+
+  .detail-title {
+    font-size: 24px;
+  }
+
+  /* Similarity */
+
+  .similarity-box {
+    padding: 22px;
+  }
+
+  .similarity-box-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  /* Reasons */
 
   .reason-grid,
   .ai-grid,
   .timeline-grid {
     grid-template-columns: 1fr;
+    gap: 32px;
   }
+
+  /* Tabs */
 
   .detail-tabs {
     gap: 24px;
+
+    margin: -24px -20px 24px;
+    padding: 0 20px;
+
     overflow-x: auto;
+  }
+
+  /* Translation */
+
+  .translation-row {
+    align-items: flex-start;
+  }
+}
+
+/* ========================================
+   Responsive - Small Mobile
+======================================== */
+
+@media (max-width: 480px) {
+  .detail-card {
+    padding: 20px 16px;
+  }
+
+  .detail-title {
+    font-size: 22px;
+  }
+
+  .similarity-box {
+    padding: 20px 16px;
+  }
+
+  .similarity-box .section-label {
+    font-size: 17px;
+  }
+
+  .translation-row {
+    flex-direction: column;
+  }
+
+  .translation-item {
+    grid-template-columns:
+      90px
+      minmax(0, 1fr);
+
+    gap: 8px;
+  }
+
+  .theme-bar-row {
+    grid-template-columns:
+      70px
+      minmax(0, 1fr)
+      36px;
+
+    gap: 8px;
+  }
+
+  .theme-bar-label,
+  .theme-bar-value {
+    font-size: 12px;
+  }
+
+  .keyword-tag {
+    font-size: 12px;
+    padding: 7px 11px;
   }
 }

@@ -1,8 +1,13 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import "./literature-detail.css";
-import { addFavorite, removeFavorite } from "@/api/favorites";
+import {
+  getMyFavoriteWorks,
+  addFavorite,
+  removeFavorite,
+} from "@/api/favorites";
 
 type TagCategory =
   | "ERA_SETTING"
@@ -135,6 +140,13 @@ export default function LiteratureDetailPage({
 }) {
   const resolvedParams = use(params);
   const { contentId, workId } = resolvedParams;
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("category");
+
+  const selectedCategory: TagCategory | null =
+    CATEGORY_ORDER.includes(categoryParam as TagCategory)
+      ? (categoryParam as TagCategory)
+      : null;
 
   const [activeTab, setActiveTab] = useState<TabId>("intro");
   const [liked, setLiked] = useState(false);
@@ -153,17 +165,33 @@ export default function LiteratureDetailPage({
       setLoading(true);
       setError(null);
       try {
-        const [workData, recommendationData, translationData] = await Promise.all([
-          fetchJSON<LiteraryWork>(`/literatures/${workId}`),
-          fetchJSON<RecommendationDetail>(
-            `/k-contents/${contentId}/recommendations/${workId}`
-          ),
-          fetchJSON<Translation[]>(`/translations/${workId}`).catch(() => [] as Translation[]),
-        ]);
+        const [workData, recommendationData, translationData, favorites] =
+          await Promise.all([
+            fetchJSON<LiteraryWork>(`/literatures/${workId}`),
+
+            fetchJSON<RecommendationDetail>(
+              `/k-contents/${contentId}/recommendations/${workId}`
+            ),
+
+            fetchJSON<Translation[]>(`/translations/${workId}`).catch(
+              () => [] as Translation[]
+            ),
+
+            getMyFavoriteWorks().catch((err) => {
+              console.error("찜 목록 조회 실패:", err);
+              return null;
+            }),
+          ]);
 
         if (cancelled) return;
         setWork(workData);
-        setLiked(workData.is_favorite ?? false);
+        setLiked(
+          favorites
+            ? favorites.some(
+                (favorite) => favorite.work_id === workData.work_id
+              )
+            : (workData.is_favorite ?? false)
+        );
         setRecommendation(recommendationData);
         setTranslations(Array.isArray(translationData) ? translationData : []);
       } catch (e) {
@@ -237,7 +265,12 @@ export default function LiteratureDetailPage({
     );
   }
 
-  const matchPercent = Math.round((recommendation.similarity_score ?? 0) * 100);
+  const matchScore = selectedCategory
+    ? (recommendation.category_scores?.[selectedCategory] ?? 0)
+    : recommendation.similarity_score;
+
+  const matchPercent = Math.round(matchScore * 100);
+
   const { heading: matchHeading, description: matchDescription } = buildRecommendationCopy(
     recommendation.category_scores ?? {},
     recommendation.literature_tags ?? []
@@ -322,26 +355,31 @@ export default function LiteratureDetailPage({
                     aria-label={liked ? "찜 해제" : "찜하기"}
                     onClick={handleToggleLike}
                     disabled={isLikingLoading}
-                    style={{ color: liked ? "#E5484D" : "inherit" }}
                   >
                     <HeartIcon filled={liked} />
                   </button>
                 </div>
 
                 <section className="similarity-section">
-                  <h2 className="section-label">K-콘텐츠와의 유사도</h2>
                   <div className="similarity-box">
-                    <DonutChart percent={matchPercent} />
-                    <div className="similarity-text">
-                      <p className="similarity-heading">{matchHeading}</p>
-                      <p className="similarity-desc">
-                        {matchDescription.split("\n").map((line, i) => (
-                          <span key={i}>
-                            {line}
-                            <br />
-                          </span>
-                        ))}
-                      </p>
+                    <h2 className="section-label">
+                      {selectedCategory
+                        ? `${CATEGORY_LABELS[selectedCategory]} 유사도`
+                        : "종합 유사도"}
+                    </h2>
+                    <div className="similarity-box-content">
+                      <DonutChart percent={matchPercent} />
+                      <div className="similarity-text">
+                        <p className="similarity-heading">{matchHeading}</p>
+                        <p className="similarity-desc">
+                          {matchDescription.split("\n").map((line, i) => (
+                            <span key={i}>
+                              {line}
+                              <br />
+                            </span>
+                          ))}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </section>
@@ -542,13 +580,21 @@ function DonutChart({ percent }: { percent: number }) {
   return (
     <div className="donut-chart">
       <svg width="104" height="104" viewBox="0 0 104 104">
-        <circle cx="52" cy="52" r={radius} fill="none" stroke="#FBDACB" strokeWidth="10" />
         <circle
           cx="52"
           cy="52"
           r={radius}
           fill="none"
-          stroke="#FF6A3D"
+          stroke="#EBDDD0"
+          strokeWidth="10"
+        />
+
+        <circle
+          cx="52"
+          cy="52"
+          r={radius}
+          fill="none"
+          stroke="#B87953"
           strokeWidth="10"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
@@ -556,6 +602,7 @@ function DonutChart({ percent }: { percent: number }) {
           transform="rotate(-90 52 52)"
         />
       </svg>
+
       <span className="donut-chart-label">{percent}%</span>
     </div>
   );
@@ -577,12 +624,20 @@ function BackIcon() {
 
 function HeartIcon({ filled = false }: { filled?: boolean }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
       <path
-        d="M12 20.5s-7.5-4.35-10-9.02C0.4 8.1 2.2 4.5 5.7 4.5c2 0 3.6 1.1 4.3 2.7.7-1.6 2.3-2.7 4.3-2.7 3.5 0 5.3 3.6 3.7 6.98C19.5 16.15 12 20.5 12 20.5Z"
+        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"
         fill={filled ? "currentColor" : "none"}
         stroke="currentColor"
-        strokeWidth="1.6"
+        strokeWidth="1.8"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>

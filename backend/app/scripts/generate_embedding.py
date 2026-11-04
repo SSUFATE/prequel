@@ -1,9 +1,23 @@
+import logging
+
 import app.models
+
+from sqlalchemy import select
 
 from app.database import SessionLocal
 from app.domains.kcontents.model import KContent
 from app.domains.literatures.model import LiteraryWork
 from app.services.embedding_service import embedding_service
+
+
+BATCH_SIZE = 100
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+
+logger = logging.getLogger(__name__)
 
 
 def build_kcontent_text(content: KContent) -> str:
@@ -20,70 +34,110 @@ def build_literature_text(literature: LiteraryWork) -> str:
 """.strip()
 
 
-def generate_kcontent_embeddings(db):
-    contents = (
-        db.query(KContent)
-        .filter(KContent.embedding.is_(None))
-        .all()
-    )
-    # contents = (
-    #     db.query(KContent)
-    #     .filter(KContent.embedding.is_(None))
-    #     .limit(3)
-    #     .all()
-    # )
+def generate_embeddings(db, model, id_column, build_text, name):
+    success = 0
+    failed = []
+    last_id = None
 
-    print(f"K콘텐츠 임베딩 생성 대상: {len(contents)}개")
-
-    for index, content in enumerate(contents, start=1):
-        text = build_kcontent_text(content)
-
-        content.embedding = embedding_service.encode(text)
-
-        print(
-            f"[KContent {index}/{len(contents)}] "
-            f"{content.title}"
+    while True:
+        # 1. 임베딩이 없는 작품 100개 조회
+        stmt = (
+            select(model)
+            .where(model.embedding.is_(None))
+            .order_by(id_column)
+            .limit(BATCH_SIZE)
         )
 
-    db.commit()
+        if last_id is not None:
+            stmt = stmt.where(id_column > last_id)
 
+        items = db.scalars(stmt).all()
 
-def generate_literature_embeddings(db):
-    literatures = (
-        db.query(LiteraryWork)
-        .filter(LiteraryWork.embedding.is_(None))
-        .all()
+        if not items:
+            break
+
+        # 2. 마지막 조회 ID 저장
+        last_id = getattr(items[-1], id_column.key)
+
+        # 3. 작품별 임베딩 생성
+        for item in items:
+            item_id = getattr(item, id_column.key)
+
+            try:
+                text = build_text(item)
+                vector = embedding_service.encode(text)
+
+                item.embedding = vector
+                success += 1
+
+                logger.info(
+                    "[%s] %s (ID=%s)",
+                    name,
+                    item.title,
+                    item_id,
+                )
+
+            except Exception:
+                failed.append(item_id)
+
+                logger.exception(
+                    "[%s] 임베딩 생성 실패: ID=%s",
+                    name,
+                    item_id,
+                )
+
+                # 실패한 객체의 변경사항 초기화
+                db.expire(item)
+
+        # 4. 배치 단위 저장
+        try:
+            db.commit()
+            logger.info(
+                "%s 저장 완료: 누적 %s개",
+                name,
+                success,
+            )
+
+        except Exception:
+            db.rollback()
+            logger.exception(
+                "%s 배치 저장 실패",
+                name,
+            )
+            raise
+
+    logger.info(
+        "%s 완료: 성공 %s개 / 실패 %s개",
+        name,
+        success,
+        len(failed),
     )
-    # literatures = (
-    #     db.query(LiteraryWork)
-    #     .filter(LiteraryWork.embedding.is_(None))
-    #     .limit(3)
-    #     .all()
-    # )
 
-    print(f"문학 임베딩 생성 대상: {len(literatures)}개")
-
-    for index, literature in enumerate(literatures, start=1):
-        text = build_literature_text(literature)
-
-        literature.embedding = embedding_service.encode(text)
-
-        print(
-            f"[Literature {index}/{len(literatures)}] "
-            f"{literature.title}"
-        )
-
-    db.commit()
+    if failed:
+        logger.warning("%s 실패 ID: %s", name, failed)
 
 
 def main():
     db = SessionLocal()
 
     try:
-        generate_kcontent_embeddings(db)
-        generate_literature_embeddings(db)
+        generate_embeddings(
+            db=db,
+            model=KContent,
+            id_column=KContent.content_id,
+            build_text=build_kcontent_text,
+            name="KContent",
+        )
 
-        print("임베딩 생성 완료")
+        generate_embeddings(
+            db=db,
+            model=LiteraryWork,
+            id_column=LiteraryWork.work_id,
+            build_text=build_literature_text,
+            name="Literature",
+        )
+
+        logger.info("전체 임베딩 생성 완료")
 
     except Exception:
         db.rollback()

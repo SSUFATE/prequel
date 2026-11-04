@@ -41,30 +41,29 @@ class TMDbClient:
     
     # DISCOVER/MOVIE
     def get_korean_movies(
-        self, 
+        self,
         page: int = 1,
         genre_id: int | None = None,
-    ) -> list[dict]:
-        params: dict[str, Any] = {
-            "language": "ko-KR",                        
-            "with_origin_country": "KR",                # 한국 제작
-            "with_original_language": "ko",             # 원어 한국어
-            "primary_release_date.gte": "2000-01-01",   # 2000년 이후
-            "sort_by": "popularity.desc",               # 인기순
-            "include_adult": False,                     # 성인 콘텐츠 제외
-            "vote_count.gte": 50,                      # tmdb 투표 100개 이상
+        year: int | None = None,
+        sort_by: str = "popularity.desc",
+    ) -> dict:
+        params = {
+            "language": "ko-KR",
+            "with_origin_country": "KR",
+            "with_original_language": "ko",
+            "sort_by": sort_by,
+            "include_adult": False,
+            "include_video": False,
             "page": page,
         }
 
         if genre_id is not None:
-            params["with_genres"] = str(genre_id)       # 장르별 수집
+            params["with_genres"] = str(genre_id)
 
-        data = self._get(
-            "/discover/movie",
-            params=params
-        )
+        if year is not None:
+            params["primary_release_year"] = year
 
-        return data.get("results", [])
+        return self._get("/discover/movie", params=params)
     
     # DISCOVER/TV
     def get_korean_tv_contents(self, page: int = 1) -> list[dict]:

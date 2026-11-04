@@ -3,6 +3,7 @@ import type {
   KContent,
   KContentListParams,
   KContentListResponse,
+  HomeSectionsResponse,
 } from "@/types/kcontent";
 
 export const getKContents = async (
@@ -32,3 +33,12 @@ export const getKContentById = async (
 
   return response.data;
 }
+
+// 홈 화면 -> 섹션별 영화 조회
+export const getHomeSections = async (): Promise<HomeSectionsResponse> => {
+  const response = await axiosInstance.get<HomeSectionsResponse>(
+    "/api/v1/k-contents/home"
+  );
+
+  return response.data;
+};

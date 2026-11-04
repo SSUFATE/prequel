@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 
@@ -7,7 +8,11 @@ import "./recommendations.css";
 
 import { getKContentById } from "@/api/kcontents";
 import { getRecommendations } from "@/api/recommendations";
-import { addFavorite, removeFavorite } from "@/api/favorites";
+import {
+  getMyFavoriteWorks,
+  addFavorite,
+  removeFavorite,
+} from "@/api/favorites";
 
 import type { KContent } from "@/types/kcontent";
 import type {
@@ -48,6 +53,8 @@ export default function RecommendationPage() {
   const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+
   // 선택한 K콘텐츠 조회
   useEffect(() => {
     if (!Number.isFinite(contentId)) return;
@@ -86,9 +93,14 @@ export default function RecommendationPage() {
 
         setRecommendations(data.recommendations);
       } catch (error) {
-        console.error("추천 목록 조회 실패:", error);
-        setRecommendations([]);
-        setError("추천 작품을 불러오지 못했어요.");
+        if (axios.isAxiosError(error)) {
+        console.log("요청 URL:", error.config?.url);
+        console.log("상태 코드:", error.response?.status);
+        console.log("에러 내용:", error.response?.data);
+      }
+
+  setRecommendations([]);
+  setError("추천 작품을 불러오지 못했어요.");
       } finally {
         setIsRecommendationsLoading(false);
       }
@@ -96,33 +108,78 @@ export default function RecommendationPage() {
 
     fetchRecommendations();
   }, [contentId, selectedTheme]);
+  
+  // 찜 목록 조회
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchFavorites = async () => {
+      try {
+        const favorites = await getMyFavoriteWorks();
+
+        if (!cancelled) {
+          setFavoriteIds(
+            new Set(favorites.map((fav) => fav.work_id))
+          );
+        }
+      } catch (error) {
+        console.error("찜 목록 조회 실패:", error);
+      }
+    };
+
+    fetchFavorites();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
 
-  const handleToggleFavorite = async (e: React.MouseEvent, item: Recommendation) => {
+  const handleToggleFavorite = async (
+    e: React.MouseEvent,
+    item: Recommendation
+  ) => {
     e.stopPropagation();
 
-    const isFav = (item as any).is_favorite ?? false;
-    const targetWorkId = item.work_id;
+    const workId = item.work_id;
+    const isFav = favoriteIds.has(workId);
 
-    setRecommendations((prev) =>
-      prev.map((rec) =>
-        rec.work_id === targetWorkId ? { ...rec, is_favorite: !isFav } : rec
-      )
-    );
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+
+      if (isFav) {
+        next.delete(workId);
+      } else {
+        next.add(workId);
+      }
+
+      return next;
+    });
 
     try {
       if (isFav) {
-        await removeFavorite(targetWorkId);
+        await removeFavorite(workId);
       } else {
-        await addFavorite(targetWorkId);
+        await addFavorite(workId);
       }
     } catch (err) {
-      setRecommendations((prev) =>
-        prev.map((rec) =>
-          rec.work_id === targetWorkId ? { ...rec, is_favorite: isFav } : rec
-        )
+      setFavoriteIds((prev) => {
+        const next = new Set(prev);
+
+        if (isFav) {
+          next.add(workId);
+        } else {
+          next.delete(workId);
+        }
+
+        return next;
+      });
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "찜 처리에 실패했어요."
       );
-      alert(err instanceof Error ? err.message : "찜 처리에 실패했어요.");
     }
   };
 
@@ -167,48 +224,61 @@ export default function RecommendationPage() {
     <main className="recommendation-page">
       <div className="recommendation-inner">
         {/* 뒤로가기 */}
-        <button
-          type="button"
-          className="recommendation-back"
-          onClick={() => router.back()}
-        >
-          <span aria-hidden="true">←</span>
-          검색 결과로 돌아가기
-        </button>
+        <div className="selected-content-row">
+          <button
+            type="button"
+            className="recommendation-back"
+            onClick={() => router.back()}
+            aria-label="검색 결과로 돌아가기"
+            title="검색 결과로 돌아가기"
+          >
+            ←
+          </button>
 
-        {/* 선택한 K 콘텐츠 */}
-        <section className="selected-content">
-          <div className="selected-content-poster">
-            {selectedContent.poster_url ? (
-              <img
-                src={selectedContent.poster_url}
-                alt={`${selectedContent.title} 포스터`}
-              />
-            ) : (
-              <div className="selected-content-placeholder" />
-            )}
-          </div>
 
-          <div className="selected-content-info">
-            <span className="selected-content-label">선택한 K-콘텐츠</span>
-            <h1>{selectedContent.title}</h1>
-            <p>
-              {selectedContent.content_type === "MOVIE" ? "영화" : "드라마"}
-              {selectedContent.release_date && (
-                <>
-                  <span>·</span>
-                  {new Date(selectedContent.release_date).getFullYear()}
-                </>
+          {/* 선택한 K 콘텐츠 */}
+          <section className="selected-content">
+            <div className="selected-content-poster">
+              {selectedContent.poster_url ? (
+                <img
+                  src={selectedContent.poster_url}
+                  alt={`${selectedContent.title} 포스터`}
+                />
+              ) : (
+                <div className="selected-content-placeholder" />
               )}
-            </p>
-          </div>
-        </section>
+            </div>
+
+            <div className="selected-content-info">
+              <span className="selected-content-label">선택한 K-콘텐츠</span>
+              <div className="selected-content-title-row">
+                <h1>{selectedContent.title}</h1>
+
+                <p className="selected-content-meta">
+                  {selectedContent.content_type === "MOVIE" ? "영화" : "드라마"}
+                  {selectedContent.release_date && (
+                    <>
+                      <span>·</span>
+                      {new Date(selectedContent.release_date).getFullYear()}
+                    </>
+                  )}
+                </p>
+              </div>
+
+              {selectedContent.overview && (
+                <p className="selected-content-overview">
+                  {selectedContent.overview}
+                </p>
+              )}
+            </div>
+          </section>
+        </div>
 
         {/* 제목 */}
         <section className="recommendation-heading">
           <p className="recommendation-eyebrow">문학 추천</p>
           <h2>
-            <strong>&apos;{selectedContent.title}&apos;</strong>과 닮은 한국 문학이에요.
+            <strong>&apos;{selectedContent.title}&apos;</strong>과 닮은 한국 문학
           </h2>
           <p>
             분위기와 시대적 배경, 주제, 관계 등을 바탕으로 비슷한 작품을 찾아봤어요.
@@ -264,7 +334,7 @@ export default function RecommendationPage() {
         ) : sortedRecommendations.length > 0 ? (
           <section className="recommendation-list">
             {sortedRecommendations.map((item) => {
-              const isFav = (item as any).is_favorite ?? false;
+              const isFav = favoriteIds.has(item.work_id);
 
               return (
                 <article
@@ -272,10 +342,29 @@ export default function RecommendationPage() {
                   className="recommendation-card"
                   onClick={() =>
                     router.push(
-                      `/k-contents/${contentId}/recommendations/${item.work_id}`
+                      `/k-contents/${contentId}/recommendations/${item.work_id}${
+                        selectedTheme === "ALL"
+                        ? ""
+                        : `?category=${selectedTheme}`
+                      }`
                     )
                   }
                 >
+                  <div className="recommendation-card-top">
+                    <span className="similarity-badge">
+                      {Math.round(item.similarity_score * 100)}% 유사
+                    </span>
+
+                    <button
+                      type="button"
+                      className={`favorite-button ${isFav ? "active" : ""}`}
+                      aria-label={`${item.title} ${isFav ? "찜 해제" : "찜하기"}`}
+                      aria-pressed={isFav}
+                      onClick={(e) => handleToggleFavorite(e, item)}
+                    >
+                      <HeartIcon filled={isFav} />
+                    </button>
+                  </div>
                   <div className="literature-poster">
                     {item.cover_url ? (
                       <img src={item.cover_url} alt={`${item.title} 표지`} />
@@ -304,10 +393,6 @@ export default function RecommendationPage() {
                           )}
                         </p>
                       </div>
-
-                      <span className="similarity-badge">
-                        {Math.round(item.similarity_score * 100)}% 유사
-                      </span>
                     </div>
 
                     {item.summary && (
@@ -320,16 +405,6 @@ export default function RecommendationPage() {
                       ))}
                     </div>
                   </div>
-
-                  <button
-                    type="button"
-                    className={`favorite-button ${isFav ? "active" : ""}`}
-                    aria-label={`${item.title} ${isFav ? "찜 해제" : "찜하기"}`}
-                    onClick={(e) => handleToggleFavorite(e, item)}
-                    style={{ color: isFav ? "#E5484D" : "inherit" }}
-                  >
-                    {isFav ? "♥" : "♡"}
-                  </button>
                 </article>
               );
             })}
@@ -344,5 +419,27 @@ export default function RecommendationPage() {
         )}
       </div>
     </main>
+  );
+}
+
+// 하트 아이콘
+function HeartIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"
+        fill={filled ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

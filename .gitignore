@@ -25,3 +25,4 @@ frontend/*.tsbuildinfo
 Thumbs.db
 
 local_scripts/
+/backend/uploads/
