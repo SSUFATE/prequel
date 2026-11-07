@@ -27,6 +27,10 @@ def get_kcontent_recommendations(
         ge=1,
         le=20
     ),
+    offset: int = Query(
+        default=0,
+        ge=0
+    ),
     category: TagCategory | None = Query(
         default=None
     ),
@@ -49,6 +53,7 @@ def get_kcontent_recommendations(
         db=db,
         content_id=content_id,
         limit=limit,
+        offset=offset,
         category=category
     )
 
@@ -110,7 +115,7 @@ def get_recommendation_detail(
     return detail
 
 
-# 임베딩 기반 문학 추천
+# 임베딩 기반 문학 추천 - 사용 x
 @router.get(
     "/{content_id}/embedding-recommendations",
     response_model=RecommendationListResponse,
@@ -170,6 +175,10 @@ def get_kcontent_hybrid_recommendations(
         ge=1,
         le=20,
     ),
+    offset: int = Query(
+        default=0,  
+        ge=0
+    ),
     db: Session = Depends(get_db),
 ):
     # 1. 콘텐츠 존재 여부 확인
@@ -178,12 +187,19 @@ def get_kcontent_hybrid_recommendations(
         content_id=content_id,
     )
 
+    if kcontent is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="K-콘텐츠를 찾을 수 없습니다.",
+        )
+
     # 2. 하이브리드 추천 결과 생성
     recommendations = (
         service.get_hybrid_recommendations_by_content_id(
             db=db,
             content_id=content_id,
             limit=limit,
+            offset=offset,
         )
     )
 
