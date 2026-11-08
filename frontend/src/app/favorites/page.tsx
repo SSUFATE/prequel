@@ -9,6 +9,9 @@ import {
   removeFavorite,
   type FavoriteWorkResponse,
 } from "@/api/favorites";
+import { useAuth } from "@/app/lib/authContext";
+import SignupPromptModal from "@/components/SignupPromptModal";
+import { isAuthError } from "@/lib/isAuthError";
 
 type FavoriteBook = {
   id: number;
@@ -31,13 +34,29 @@ function toFavoriteBook(fav: FavoriteWorkResponse): FavoriteBook {
 }
 
 export default function FavoritePage() {
+  const { isLoggedIn } = useAuth();
+
   const [books, setBooks] = useState<FavoriteBook[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [removingIds, setRemovingIds] = useState<number[]>([]);
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+  const [authRequired, setAuthRequired] = useState(false);
 
   useEffect(() => {
+    // 비로그인이면 API 호출 없이 바로 유도창
+    if (!isLoggedIn) {
+      setAuthRequired(true);
+      setShowSignupPrompt(true);
+      setIsLoading(false);
+      return;
+    }
+
     let cancelled = false;
+
+    setAuthRequired(false);
+    setIsLoading(true);
+    setError(null);
 
     getMyFavoriteWorks()
       .then((data) => {
@@ -46,6 +65,13 @@ export default function FavoritePage() {
       })
       .catch((err) => {
         if (cancelled) return;
+
+        // 토큰 만료 등으로 401을 받은 경우도 유도창
+        if (isAuthError(err)) {
+          setAuthRequired(true);
+          setShowSignupPrompt(true);
+          return;
+        }
 
         setError(
           err instanceof Error
@@ -60,10 +86,16 @@ export default function FavoritePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isLoggedIn]);
 
   const handleRemove = async (id: number) => {
     if (removingIds.includes(id)) return;
+
+    // 비로그인이면 API 호출 없이 바로 유도창
+    if (!isLoggedIn) {
+      setShowSignupPrompt(true);
+      return;
+    }
 
     setRemovingIds((prev) => [...prev, id]);
 
@@ -74,6 +106,12 @@ export default function FavoritePage() {
         prev.filter((book) => book.id !== id)
       );
     } catch (err) {
+      // 토큰 만료 등으로 401을 받은 경우도 유도창
+      if (isAuthError(err)) {
+        setShowSignupPrompt(true);
+        return;
+      }
+
       alert(
         err instanceof Error
           ? err.message
@@ -106,7 +144,7 @@ export default function FavoritePage() {
             </p>
           </div>
 
-          {!isLoading && !error && books.length > 0 && (
+          {!isLoading && !error && !authRequired && books.length > 0 && (
             <span className="favorite-count">
               총 <strong>{books.length}</strong>개의 작품
             </span>
@@ -117,6 +155,10 @@ export default function FavoritePage() {
         {isLoading ? (
           <div className="favorite-message">
             찜 목록을 불러오는 중...
+          </div>
+        ) : authRequired ? (
+          <div className="favorite-message">
+            로그인하면 찜한 문학을 확인할 수 있어요.
           </div>
         ) : error ? (
           <div className="favorite-message favorite-error">
@@ -139,6 +181,13 @@ export default function FavoritePage() {
         )}
 
       </main>
+
+      <SignupPromptModal
+      open={showSignupPrompt}
+      onClose={() => setShowSignupPrompt(false)}
+      title="로그인이 필요해요"
+      description="로그인하면 찜한 문학 작품을 한곳에서 확인할 수 있어요."
+    />
     </div>
   );
 }
