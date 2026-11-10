@@ -1,10 +1,18 @@
+
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { ApiError, signup } from "@/app/lib/api";
+import {
+  ApiError,
+  signup,
+  login as loginRequest,
+  checkLoginId,
+  checkEmail,
+} from "@/api/auth";
+import { useAuth } from "@/app/lib/authContext";
 import "./signup.css";
 
 const LANGUAGES = [
@@ -17,8 +25,26 @@ const LANGUAGES = [
 
 type FieldState = "default" | "error" | "success";
 
+// 서버 중복 확인 상태
+type CheckStatus =
+  | "idle"
+  | "checking"
+  | "available"
+  | "taken"
+  | "error";
+
+type CheckResult = {
+  value: string;
+  status: CheckStatus;
+};
+
 export default function SignupPage() {
   const router = useRouter();
+  const auth = useAuth();
+
+  // =========================
+  // 회원가입 입력값
+  // =========================
 
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
@@ -27,34 +53,185 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [preferredLanguage, setPreferredLanguage] = useState("");
 
+  // =========================
+  // 입력 및 제출 상태
+  // =========================
+
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const [idTakenByServer, setIdTakenByServer] = useState(false);
-  const [emailTakenByServer, setEmailTakenByServer] = useState(false);
+  // 서버에서 확인한 아이디·이메일 중복 검사 결과
+  // value를 함께 저장해 이전 입력값의 검사 결과가
+  // 현재 입력값에 적용되지 않도록 처리
+  const [idCheck, setIdCheck] = useState<CheckResult>({
+    value: "",
+    status: "idle",
+  });
+
+  const [emailCheck, setEmailCheck] = useState<CheckResult>({
+    value: "",
+    status: "idle",
+  });
+
+  // =========================
+  // 입력값 형식 검사
+  // =========================
 
   const idFormatValid = id.length >= 4;
 
+  const emailFormatValid =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  // =========================
+  // 아이디 중복 확인
+  // =========================
+
+  useEffect(() => {
+    // 아이디가 4자 미만이면 서버 요청하지 않음
+    if (!idFormatValid) return;
+
+    const controller = new AbortController();
+
+    // 입력이 멈춘 후 500ms가 지나면 중복 확인
+    const timer = setTimeout(async () => {
+      setIdCheck({
+        value: id,
+        status: "checking",
+      });
+
+      try {
+        const available = await checkLoginId(
+          id,
+          controller.signal
+        );
+
+        if (!controller.signal.aborted) {
+          setIdCheck({
+            value: id,
+            status: available ? "available" : "taken",
+          });
+        }
+      } catch {
+        // 취소된 요청은 오류로 표시하지 않음
+        if (!controller.signal.aborted) {
+          setIdCheck({
+            value: id,
+            status: "error",
+          });
+        }
+      }
+    }, 500);
+
+    // 입력값이 바뀌면 이전 타이머 및 요청 취소
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [id, idFormatValid]);
+
+  // =========================
+  // 이메일 중복 확인
+  // =========================
+
+  useEffect(() => {
+    // 이메일 형식이 올바르지 않으면 서버 요청하지 않음
+    if (!emailFormatValid) return;
+
+    const controller = new AbortController();
+
+    // 입력이 멈춘 후 500ms가 지나면 중복 확인
+    const timer = setTimeout(async () => {
+      setEmailCheck({
+        value: email,
+        status: "checking",
+      });
+
+      try {
+        const available = await checkEmail(
+          email,
+          controller.signal
+        );
+
+        if (!controller.signal.aborted) {
+          setEmailCheck({
+            value: email,
+            status: available ? "available" : "taken",
+          });
+        }
+      } catch {
+        // 취소된 요청은 오류로 표시하지 않음
+        if (!controller.signal.aborted) {
+          setEmailCheck({
+            value: email,
+            status: "error",
+          });
+        }
+      }
+    }, 500);
+
+    // 입력값이 바뀌면 이전 타이머 및 요청 취소
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [email, emailFormatValid]);
+
+  // =========================
+  // 아이디 검증 상태 및 안내 문구
+  // =========================
+
+  // 현재 입력값과 서버 검사 대상이 일치할 때만 결과 사용
+  const currentIdStatus: CheckStatus =
+    idCheck.value === id ? idCheck.status : "idle";
+
   const idState: FieldState = useMemo(() => {
-    if (idTakenByServer) return "error";
     if (!touched.id || id.length === 0) return "default";
-    return idFormatValid ? "success" : "error";
-  }, [id, touched.id, idFormatValid, idTakenByServer]);
+
+    if (!idFormatValid || currentIdStatus === "taken") {
+      return "error";
+    }
+
+    if (currentIdStatus === "available") {
+      return "success";
+    }
+
+    return "default";
+  }, [id, touched.id, idFormatValid, currentIdStatus]);
 
   const idMessage = useMemo(() => {
-    if (idTakenByServer) return "이미 사용 중인 아이디입니다.";
     if (!touched.id || id.length === 0) return null;
 
-    return idFormatValid
-      ? "사용 가능한 아이디입니다."
-      : "아이디는 4자 이상이어야 합니다.";
-  }, [idFormatValid, idTakenByServer, touched.id, id]);
+    if (!idFormatValid) {
+      return "아이디는 4자 이상이어야 합니다.";
+    }
+
+    if (currentIdStatus === "taken") {
+      return "이미 사용 중인 아이디입니다.";
+    }
+
+    if (currentIdStatus === "available") {
+      return "사용 가능한 아이디입니다.";
+    }
+
+    if (currentIdStatus === "error") {
+      return "중복 확인에 실패했습니다. 다시 입력해주세요.";
+    }
+
+    return "아이디 중복 확인 중...";
+  }, [id, touched.id, idFormatValid, currentIdStatus]);
+
+  // =========================
+  // 비밀번호 검증
+  // =========================
 
   const passwordValid = password.length >= 8;
 
   const passwordState: FieldState = useMemo(() => {
-    if (!touched.password || password.length === 0) return "default";
+    if (!touched.password || password.length === 0) {
+      return "default";
+    }
+
     return passwordValid ? "success" : "error";
   }, [password, passwordValid, touched.password]);
 
@@ -69,6 +246,10 @@ export default function SignupPage() {
       ? null
       : "비밀번호는 8자 이상이어야 합니다.";
   }, [password, passwordValid, touched.password]);
+
+  // =========================
+  // 비밀번호 확인 검증
+  // =========================
 
   const passwordConfirmState: FieldState = useMemo(() => {
     if (!touched.passwordConfirm || passwordConfirm.length === 0) {
@@ -88,24 +269,57 @@ export default function SignupPage() {
       : "비밀번호가 일치하지 않습니다.";
   }, [passwordConfirm, password, touched.passwordConfirm]);
 
-  const emailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  // =========================
+  // 이메일 검증 상태 및 안내 문구
+  // =========================
+
+  const currentEmailStatus: CheckStatus =
+    emailCheck.value === email ? emailCheck.status : "idle";
 
   const emailState: FieldState = useMemo(() => {
-    if (emailTakenByServer) return "error";
-    if (!touched.email || email.length === 0) return "default";
+    if (!touched.email || email.length === 0) {
+      return "default";
+    }
 
-    return emailFormatValid ? "success" : "error";
-  }, [email, emailFormatValid, touched.email, emailTakenByServer]);
+    if (!emailFormatValid || currentEmailStatus === "taken") {
+      return "error";
+    }
+
+    if (currentEmailStatus === "available") {
+      return "success";
+    }
+
+    return "default";
+  }, [email, emailFormatValid, touched.email, currentEmailStatus]);
 
   const emailMessage = useMemo(() => {
-    if (emailTakenByServer) return "이미 가입된 이메일입니다.";
     if (!touched.email || email.length === 0) return null;
 
-    return emailFormatValid
-      ? "사용 가능한 이메일입니다."
-      : "올바른 이메일 형식을 입력해주세요.";
-  }, [email, emailFormatValid, touched.email, emailTakenByServer]);
+    if (!emailFormatValid) {
+      return "올바른 이메일 형식을 입력해주세요.";
+    }
 
+    if (currentEmailStatus === "taken") {
+      return "이미 가입된 이메일입니다.";
+    }
+
+    if (currentEmailStatus === "available") {
+      return "사용 가능한 이메일입니다.";
+    }
+
+    if (currentEmailStatus === "error") {
+      return "중복 확인에 실패했습니다. 다시 입력해주세요.";
+    }
+
+    return "이메일 중복 확인 중...";
+  }, [email, emailFormatValid, touched.email, currentEmailStatus]);
+
+  // =========================
+  // 회원가입 가능 여부
+  // =========================
+
+  // 아이디와 이메일은 서버 중복 확인까지 성공해야
+  // 회원가입 버튼을 활성화함
   const isFormValid =
     idState === "success" &&
     passwordValid &&
@@ -118,6 +332,10 @@ export default function SignupPage() {
   function markTouched(field: string) {
     setTouched((prev) => ({ ...prev, [field]: true }));
   }
+
+  // =========================
+  // 회원가입 요청
+  // =========================
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -136,14 +354,26 @@ export default function SignupPage() {
         language: preferredLanguage,
       });
 
-      router.push("/login");
+      // 회원가입 성공 후 자동 로그인
+      await loginRequest(id.trim(), password);
+      await auth.login();
+
+      router.replace("/");
     } catch (err) {
+      // 회원가입 직전 다른 사용자가 동일한 아이디나
+      // 이메일로 가입했을 경우 서버의 409 응답 처리
       if (err instanceof ApiError && err.status === 409) {
         if (err.message.includes("아이디")) {
-          setIdTakenByServer(true);
+          setIdCheck({
+            value: id,
+            status: "taken",
+          });
           markTouched("id");
         } else if (err.message.includes("이메일")) {
-          setEmailTakenByServer(true);
+          setEmailCheck({
+            value: email,
+            status: "taken",
+          });
           markTouched("email");
         } else {
           setSubmitError(err.message);
@@ -162,7 +392,7 @@ export default function SignupPage() {
 
   return (
     <main className="signup-page">
-      <section className="signup-card">
+      <section className="signup-card">rm
         <div className="signup-heading">
           <h1>Prequel</h1>
 
@@ -187,7 +417,6 @@ export default function SignupPage() {
               value={id}
               onChange={(e) => {
                 setId(e.target.value);
-                if (idTakenByServer) setIdTakenByServer(false);
               }}
               onBlur={() => markTouched("id")}
             />
@@ -272,7 +501,6 @@ export default function SignupPage() {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                if (emailTakenByServer) setEmailTakenByServer(false);
               }}
               onBlur={() => markTouched("email")}
             />

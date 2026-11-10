@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from app.database import Base
 
-# 모델 import 시 Base.metadata에 테이블이 등록됨
+# 모델 import 시 Base.metadata에 테이블이 등록됨Y
 import app.models
 
 load_dotenv()

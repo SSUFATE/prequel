@@ -18,13 +18,13 @@ export interface FavoriteResponse {
 }
 
 export function getMyFavoriteWorks(): Promise<FavoriteWorkResponse[]> {
-  return apiGet<FavoriteWorkResponse[]>("/api/v1/favorites", { auth: true });
+  return apiGet<FavoriteWorkResponse[]>("/api/v1/favorites");
 }
 
 export function addFavorite(workId: number): Promise<FavoriteResponse> {
-  return apiPostEmpty<FavoriteResponse>(`/api/v1/favorites/${workId}`, { auth: true });
+  return apiPostEmpty<FavoriteResponse>(`/api/v1/favorites/${workId}`);
 }
 
 export function removeFavorite(workId: number): Promise<void> {
-  return apiDelete<void>(`/api/v1/favorites/${workId}`, { auth: true });
+  return apiDelete<void>(`/api/v1/favorites/${workId}`);
 }

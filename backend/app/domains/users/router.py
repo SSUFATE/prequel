@@ -2,6 +2,11 @@
 ### 회원 조회, 회원정보 수정, 회원 탈퇴 API
 ### 프로필 이미지 업로드, 수정, 삭제 API
 
+import os
+
+from fastapi import Response
+from app.core.security import ACCESS_TOKEN_EXPIRE_MINUTES
+
 import uuid
 import warnings
 
@@ -38,7 +43,6 @@ from app.database import get_db
 
 from app.domains.users.schema import (
     MessageResponse,
-    TokenResponse,
     UserCreate,
     UserResponse,
     UserUpdate,
@@ -49,6 +53,63 @@ from app.domains.users.schema import (
 router = APIRouter(
     tags=["Users"]
 )
+
+COOKIE_NAME = "access_token"
+
+COOKIE_SECURE = os.getenv(
+    "COOKIE_SECURE", "false"
+).lower() == "true"
+
+COOKIE_SAMESITE = os.getenv(
+    "COOKIE_SAMESITE", "lax"
+).lower()
+
+if COOKIE_SAMESITE not in ("lax", "strict", "none"):
+    raise RuntimeError("COOKIE_SAMESITE 설정이 올바르지 않습니다.")
+
+if COOKIE_SAMESITE == "none" and not COOKIE_SECURE:
+    raise RuntimeError("SameSite=None은 Secure=True가 필요합니다.")
+
+
+def set_auth_cookie(response: Response, token: str):
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=token,
+        httponly=True,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/",
+    )
+
+# =========================
+# 회원가입 중복 확인
+# =========================
+
+@router.get("/auth/check-login-id")
+def check_login_id(
+    login_id: str,
+    db: Session = Depends(get_db)
+):
+    existing_user = user_crud.get_user_by_login_id(
+        login_id=login_id,
+        db=db
+    )
+
+    return {"available": existing_user is None}
+
+
+@router.get("/auth/check-email")
+def check_email(
+    email: str,
+    db: Session = Depends(get_db)
+):
+    existing_user = user_crud.get_user_by_email(
+        email=email,
+        db=db
+    )
+
+    return {"available": existing_user is None}
 
 
 # =========================
@@ -111,58 +172,43 @@ def register_user(
 
 
 # =========================
-# 로그인
+# 로그인: JWT 발급 및 HttpOnly Cookie 설정
 # =========================
 
-@router.post(
-    "/auth/login",
-    response_model=TokenResponse
-)
+@router.post("/auth/login", response_model=MessageResponse)
 def login(
+    response: Response,
     login_form: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    # OAuth2PasswordRequestForm의 username 필드에 login_id 전달
-    login_id = login_form.username
-
     login_user = user_crud.get_user_by_login_id(
-        login_id=login_id,
-        db=db
+        login_id=login_form.username,
+        db=db,
     )
 
-    if login_user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="아이디 또는 비밀번호가 올바르지 않습니다.",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-
-    password_is_verified = verify_password(
+    if login_user is None or not verify_password(
         plain_password=login_form.password,
-        hashed_password=login_user.password_hash
-    )
-
-    if not password_is_verified:
+        hashed_password=login_user.password_hash,
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="아이디 또는 비밀번호가 올바르지 않습니다.",
-            headers={"WWW-Authenticate": "Bearer"}
         )
 
     if not login_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="비활성화된 사용자입니다."
+            detail="비활성화된 사용자입니다.",
         )
 
     access_token = create_access_token(
         user_id=login_user.user_id
     )
 
-    return TokenResponse(
-        access_token=access_token,
-        token_type="bearer"
-    )
+    set_auth_cookie(response, access_token)
+
+    return {"message": "로그인되었습니다."}
+
 
 
 # =========================
@@ -235,46 +281,21 @@ def update_current_user(
 
 
 # =========================
-# 회원 탈퇴
-# =========================
-
-@router.delete(
-    "/users/me",
-    response_model=MessageResponse
-)
-def delete_current_user(
-    current_user: User = Depends(get_authenticated_user),
-    db: Session = Depends(get_db)
-):
-    old_image_url = current_user.profile_image_url
-
-    user_crud.delete_user(
-        db=db,
-        db_user=current_user
-    )
-
-    # DB 삭제 성공 후 프로필 이미지 파일 삭제
-    remove_local_profile_image(old_image_url)
-
-    return {
-        "message": "회원 탈퇴가 완료되었습니다."
-    }
-
-
-# =========================
 # 로그아웃
 # =========================
 
-@router.post(
-    "/auth/logout",
-    response_model=MessageResponse
-)
-def logout(
-    current_user: User = Depends(get_authenticated_user)
-):
-    return {
-        "message": "로그아웃되었습니다."
-    }
+@router.post("/auth/logout", response_model=MessageResponse)
+def logout(response: Response):
+    response.delete_cookie(
+        key=COOKIE_NAME,
+        path="/",
+        secure=COOKIE_SECURE,
+        httponly=True,
+        samesite=COOKIE_SAMESITE,
+    )
+
+    return {"message": "로그아웃되었습니다."}
+
 
 
 # =========================
@@ -576,12 +597,15 @@ def remove_profile_image(
     return updated_user
 
 
-# 회원탈퇴 시 비밀번호 확인
+# =========================
+# 회원 탈퇴 (비밀번호 확인)
+# =========================
 @router.delete("/users/me", response_model=MessageResponse)
 def delete_current_user(
     request: UserDeleteRequest,
+    response: Response,
     current_user: User = Depends(get_authenticated_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     # 비밀번호 확인
     if not verify_password(
@@ -604,6 +628,13 @@ def delete_current_user(
 
     remove_local_profile_image(old_image_url)
 
+    response.delete_cookie(
+        key=COOKIE_NAME,
+        path="/",
+        secure=COOKIE_SECURE,
+        httponly=True,
+        samesite=COOKIE_SAMESITE,
+    )
     return {
         "message": "회원 탈퇴가 완료되었습니다."
     }

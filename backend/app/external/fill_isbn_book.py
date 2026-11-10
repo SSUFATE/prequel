@@ -24,6 +24,9 @@ import time
 
 import psycopg2
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()  # .env 파일에서 환경변수 읽기
 
 KAKAO_URL = "https://dapi.kakao.com/v3/search/book"
 
@@ -101,9 +104,13 @@ def main():
     args = ap.parse_args()
 
     key = os.environ.get("KAKAO_REST_API_KEY")
-    dsn = os.environ.get("DATABASE_URL")
+    dsn = os.environ.get("POSTGRESQL_URL")
+
+    if dsn:
+        dsn = dsn.replace("postgresql+psycopg2://", "postgresql://", 1)
+
     if not key or not dsn:
-        sys.exit("KAKAO_REST_API_KEY 와 DATABASE_URL 환경변수를 설정하세요.")
+        sys.exit("KAKAO_REST_API_KEY 와 POSTGRESQL_URL 환경변수를 설정하세요.")
 
     conn = psycopg2.connect(dsn)
     session = requests.Session()
