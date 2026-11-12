@@ -1,6 +1,5 @@
 "use client";
 
-import axios from "axios";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 
@@ -13,6 +12,11 @@ import {
   addFavorite,
   removeFavorite,
 } from "@/api/favorites";
+
+// [추가]
+import { useAuth } from "@/app/lib/authContext";
+import SignupPromptModal from "@/components/SignupPromptModal";
+import { isAuthError } from "@/api/isAuthError";
 
 import type { KContent } from "@/types/kcontent";
 import type {
@@ -37,6 +41,9 @@ const themes: {
 
 export default function RecommendationPage() {
   const router = useRouter();
+
+  // [추가]
+  const { isLoggedIn } = useAuth();
 
   const params = useParams<{
     contentId: string;
@@ -63,6 +70,9 @@ export default function RecommendationPage() {
   const loadingRef = useRef(false);
 
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+
+  // [추가]
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
 
   // 선택한 K콘텐츠 조회
   useEffect(() => {
@@ -205,6 +215,12 @@ export default function RecommendationPage() {
   
   // 찜 목록 조회
   useEffect(() => {
+    // 비로그인이면 호출 자체를 건너뜀 (모달은 하트 클릭 때만 띄움)
+    if (!isLoggedIn) {
+      setFavoriteIds(new Set());
+      return;
+    }
+
     let cancelled = false;
 
     const fetchFavorites = async () => {
@@ -217,6 +233,8 @@ export default function RecommendationPage() {
           );
         }
       } catch (error) {
+        // 토큰 만료 등 인증 오류는 조용히 무시
+        if (isAuthError(error)) return;
         console.error("찜 목록 조회 실패:", error);
       }
     };
@@ -226,14 +244,19 @@ export default function RecommendationPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
-
+  }, [isLoggedIn]);
 
   const handleToggleFavorite = async (
     e: React.MouseEvent,
     item: Recommendation
   ) => {
     e.stopPropagation();
+
+    // [추가] 비로그인이면 API 호출·낙관적 업데이트 없이 바로 유도창
+    if (!isLoggedIn) {
+      setShowSignupPrompt(true);
+      return;
+    }
 
     const workId = item.work_id;
     const isFav = favoriteIds.has(workId);
@@ -257,6 +280,7 @@ export default function RecommendationPage() {
         await addFavorite(workId);
       }
     } catch (err) {
+      // 실패 시 롤백 (기존 로직)
       setFavoriteIds((prev) => {
         const next = new Set(prev);
 
@@ -268,6 +292,12 @@ export default function RecommendationPage() {
 
         return next;
       });
+
+      // [추가] 토큰 만료 등 401이면 유도창
+      if (isAuthError(err)) {
+        setShowSignupPrompt(true);
+        return;
+      }
 
       alert(
         err instanceof Error
@@ -328,7 +358,6 @@ export default function RecommendationPage() {
           >
             ←
           </button>
-
 
           {/* 선택한 K 콘텐츠 */}
           <section className="selected-content">
@@ -438,8 +467,8 @@ export default function RecommendationPage() {
                     router.push(
                       `/k-contents/${contentId}/recommendations/${item.work_id}${
                         selectedTheme === "ALL"
-                        ? ""
-                        : `?category=${selectedTheme}`
+                          ? ""
+                          : `?category=${selectedTheme}`
                       }`
                     )
                   }
@@ -525,6 +554,12 @@ export default function RecommendationPage() {
           </section>
         )}
       </div>
+
+      {/* [추가] 회원가입/로그인 유도 모달 */}
+      <SignupPromptModal
+        open={showSignupPrompt}
+        onClose={() => setShowSignupPrompt(false)}
+      />
     </main>
   );
 }
