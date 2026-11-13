@@ -1,0 +1,769 @@
+/* =========================
+   Recommendation Page
+========================= */
+
+/* 유사도 왼쪽, 하트 오른쪽 */
+.recommendation-card-top {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  right: 24px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1;
+}
+
+.recommendation-card-top .favorite-button {
+  position: static;
+}
+
+
+.recommendation-page {
+  min-height: calc(100vh - 72px);
+  background: transparent;
+}
+
+.recommendation-inner {
+  width: min(92%, 1400px);
+  margin: 0 auto;
+  padding: 24px 0 clamp(70px, 8vw, 120px);
+}
+
+/* =========================
+   Back
+========================= */
+
+.recommendation-back {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: transparent;
+  color: #444;
+
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.recommendation-back:hover {
+  background: #f1eadc;
+}
+
+/* =========================
+   Selected Content
+========================= */
+
+.selected-content {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  padding: 14px 20px;
+
+  border: 2px solid #a89582;
+  border-radius: 16px;
+
+  background: #fffdf7;
+
+  box-shadow:
+    0 3px 8px rgba(70, 55, 40, 0.04),
+    0 6px 18px rgba(70, 55, 40, 0.06);
+}
+
+.selected-content-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.selected-content-row .selected-content {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  margin-bottom: 0;
+}
+
+.selected-content-poster {
+  width: 90px;
+  flex-shrink: 0;
+  aspect-ratio: 2 / 3;
+
+  overflow: hidden;
+  border-radius: 8px;
+  background: #ddd;
+}
+
+.selected-content-poster img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.selected-content-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #ddd;
+}
+
+.selected-content-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.selected-content-label {
+  display: block;
+  margin-bottom: 7px;
+
+  color: #888;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.selected-content-title-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.selected-content-title-row h1 {
+  margin: 0;
+}
+
+.selected-content-title-row .selected-content-meta {
+  margin: 0;
+  color: #888;
+  font-size: 0.82rem;
+}
+
+.selected-content-info h1 {
+  margin: 0 0 9px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+  font-weight: 650;
+}
+
+.selected-content-info p {
+  margin: 0;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  color: #777;
+  font-size: 0.82rem;
+}
+
+.selected-content-info p span {
+  color: #bbb;
+}
+
+.selected-content-info .selected-content-overview {
+  width: 100%;
+  max-width: none;
+  margin-top: 8px;
+
+  color: #555;
+  font-size: 0.88rem;
+  line-height: 1.6;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* =========================
+   Heading
+========================= */
+
+.recommendation-heading {
+  max-width: 760px;
+  margin-bottom: clamp(28px, 4vw, 40px);
+}
+
+.recommendation-eyebrow {
+  margin: 0 0 8px;
+
+  color: #9b6b43;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.recommendation-heading h2 {
+  margin: 0;
+
+  font-size: clamp(1.4rem, 2.5vw, 2rem);
+  line-height: 1.35;
+  letter-spacing: -0.035em;
+}
+
+.recommendation-heading h2 strong {
+  font-weight: 750;
+}
+
+.recommendation-heading > p:last-child {
+  margin: 12px 0 0;
+
+  color: #777;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* =========================
+   Toolbar
+========================= */
+
+.recommendation-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* =========================
+   Theme Filter
+========================= */
+
+.theme-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 10px;
+  min-width: 0;
+}
+
+.theme-button {
+  flex: 0 0 auto;
+
+  min-height: 52px;
+  padding: 0 20px;
+
+  border: 1px solid #e5d8c8;
+  border-radius: 12px;
+
+  background: #fff;
+  color: #554638;
+
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.theme-button:hover {
+  background: #f5ebdd;
+  border-color: #c9ae91;
+}
+
+.theme-button:active {
+  transform: scale(0.98);
+}
+
+.theme-button.active {
+  background: #a89582;
+  border-color: #a89582;
+
+  color: #fff;
+  font-weight: 700;
+}
+
+.theme-button.active:hover {
+  background: #927b66;
+  border-color: #927b66;
+}
+
+/* =========================
+   Sort
+========================= */
+
+.recommendation-sort {
+  flex-shrink: 0;
+
+  width: 160px;
+  height: 48px;
+
+  padding: 0 38px 0 18px;
+
+  /* 테마 버튼과 구분 */
+  border: 1px solid #d8c7b5;
+  border-radius: 10px;
+
+  background-color: #f0e6d8;
+  color: #66513f;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366513f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+}
+
+.recommendation-sort:hover {
+  background-color: #e8dac9;
+  border-color: #bda58c;
+}
+
+.recommendation-sort option {
+  background: #fff;
+  color: #554638;
+}
+
+.theme-button:focus-visible,
+.recommendation-sort:focus-visible {
+  outline: 2px solid #a89582;
+  outline-offset: 3px;
+}
+
+.theme-description {
+  margin: 0 0 20px;
+
+  color: #777;
+  font-size: 0.88rem;
+}
+
+.theme-description strong {
+  margin-right: 4px;
+  color: #333;
+}
+
+/* =========================
+   Recommendation List
+========================= */
+
+.recommendation-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.recommendation-card {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 290px;
+
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+
+  gap: 22px;
+  padding: 76px 22px 22px;
+
+  border: 1px solid #a89582;;
+  border-radius: 14px;
+
+  background: #fff;
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.recommendation-card:hover {
+  transform: translateY(-2px);
+  border-color: #d6d6d6;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.045);
+}
+
+/* =========================
+   Book Cover
+========================= */
+
+.literature-poster {
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+
+  aspect-ratio: auto;
+
+  overflow: hidden;
+  border-radius: 8px;
+
+  background: #eee;
+}
+
+.literature-poster img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+  object-fit: cover;
+}
+
+.literature-placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 12px;
+
+  background: #eee;
+  color: #888;
+
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* =========================
+   Book Info
+========================= */
+
+.literature-main {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.literature-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.literature-title-row h3 {
+  margin: 0 0 10px;
+
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.literature-meta {
+  margin: 0;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.literature-meta span {
+  color: #bbb;
+}
+
+.similarity-badge {
+  flex-shrink: 0;
+  padding: 7px 11px;
+
+  border-radius: 8px;
+  background: #f3e8da;
+
+  color: #8b6246;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.recommendation-reason {
+  margin: 20px 0 0;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.7
+}
+
+/* =========================
+   Tags
+========================= */
+
+.literature-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+
+  margin-top: auto;
+  padding-top: 18px;
+  padding-right: 32px;
+}
+
+.literature-tags span {
+  padding: 7px 11px;
+
+  border-radius: 8px;
+  background: #fff0eb;
+
+  color: #ff7656;
+  font-size: 0.78rem;
+}
+
+/* =========================
+   Favorite
+========================= */
+
+.favorite-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #a89582;
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.favorite-button:hover {
+  color: #b57d58;
+  transform: scale(1.1);
+}
+
+.favorite-button.active {
+  color: #b57d58;
+}
+
+.favorite-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* =========================
+   Empty
+========================= */
+
+.recommendation-empty {
+  min-height: clamp(280px, 38vh, 420px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.recommendation-empty h3 {
+  margin: 0 0 9px;
+
+  color: #333;
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  font-weight: 600;
+}
+
+.recommendation-empty p {
+  margin: 0;
+
+  color: #888;
+  font-size: 0.92rem;
+}
+
+/* =========================
+   Tablet
+========================= */
+
+@media (max-width: 900px) {
+  .recommendation-inner {
+    width: 94%;
+    grid-template-columns: 1fr;
+  }
+
+  .recommendation-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .theme-filter {
+    width: 100%;
+    flex-wrap: nowrap;
+
+    overflow-x: auto;
+    padding-bottom: 6px;
+
+    scrollbar-width: none;
+  }
+
+  .theme-filter::-webkit-scrollbar {
+    display: none;
+  }
+
+  .theme-button {
+    flex: 0 0 auto;
+  }
+
+  .recommendation-sort {
+    align-self: flex-end;
+  }
+
+  .recommendation-card {
+    grid-template-columns: 110px minmax(0, 1fr);
+  }
+}
+
+/* =========================
+   Mobile
+========================= */
+
+@media (max-width: 640px) {
+  .recommendation-page {
+    min-height: calc(100vh - 64px);
+  }
+
+  .recommendation-inner {
+    width: 90%;
+  }
+
+  .selected-content {
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .selected-content-poster {
+    width: 72px;
+  }
+
+  .selected-content-info .selected-content-overview {
+    font-size: 0.82rem;
+    -webkit-line-clamp: 4;
+  }
+
+  .recommendation-toolbar {
+    flex-direction: column;
+  }
+
+  .theme-filter {
+    width: 100%;
+    flex: none;
+    overflow-x: auto;
+  }
+
+  .theme-filter::-webkit-scrollbar {
+    display: none;
+  }
+
+  .theme-button {
+    flex: 0 0 auto;
+    font-size: 0.9rem;
+    padding: 0 16px;
+  }
+
+  .recommendation-sort {
+    align-self: flex-end;
+  }
+
+  .recommendation-card {
+    grid-template-columns: 86px minmax(0, 1fr);
+    gap: 16px;
+    padding: 72px 16px 16px;
+  }
+
+  .recommendation-card-top {
+    left: 16px;
+    right: 16px;
+  }
+
+  .recommendation-card-top .similarity-badge {
+    margin-top: 0;
+  }
+
+  .literature-title-row {
+    display: block;
+  }
+
+  .similarity-badge {
+    display: inline-block;
+    margin-top: 10px;
+  }
+
+  .recommendation-reason {
+    margin: 16px 0 0;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+
+    color: #555;
+    font-size: 0.88rem;
+    line-height: 1.65;
+  }
+
+  .literature-tags {
+    padding-top: 14px;
+    padding-right: 30px;
+  }
+
+  .favorite-button {
+    right: 10px;
+    bottom: 10px;
+  }
+}
+
+/* =========================
+   Small Mobile
+========================= */
+
+@media (max-width: 420px) {
+  .selected-content {
+    padding: 14px;
+  }
+
+  .recommendation-card {
+    grid-template-columns: 74px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .literature-tags span:nth-child(n + 3) {
+    display: none;
+  }
+}

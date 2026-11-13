@@ -1,0 +1,899 @@
+/* =========================
+   My Page
+========================= */
+
+.mypage {
+  min-height: calc(100vh - 96px);
+
+  padding: 75px 24px 120px;
+
+  background: #fffff3;
+  color: #222;
+
+  font-family: "Inter", sans-serif;
+}
+
+.mypage-container {
+  width: 100%;
+  max-width: 760px;
+
+  margin: 0 auto;
+}
+
+/* =========================
+   Page Heading
+========================= */
+
+.mypage-heading {
+  margin-bottom: 55px;
+
+  text-align: center;
+}
+
+.mypage-eyebrow {
+  display: block;
+
+  margin-bottom: 12px;
+
+  color: #a89582;
+
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.mypage-title {
+  margin: 0;
+
+  font-size: 2.3rem;
+  font-weight: 750;
+
+  letter-spacing: -0.04em;
+  line-height: 1.3;
+}
+
+.mypage-description {
+  margin: 14px 0 0;
+
+  color: #82766d;
+
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+/* =========================
+   Profile
+========================= */
+
+.mypage-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding-bottom: 48px;
+
+  border-bottom: 1px solid #e8ddd2;
+}
+
+.mypage-avatar-wrapper {
+  position: relative;
+
+  width: 132px;
+  height: 132px;
+
+  margin-bottom: 20px;
+}
+
+.mypage-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+
+  border: 3px solid #e6d8ca;
+  border-radius: 50%;
+
+  background: #f1e9df;
+  color: #a89582;
+}
+
+.mypage-avatar-image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.mypage-avatar-edit {
+  position: absolute;
+
+  right: 2px;
+  bottom: 2px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  border: 2px solid #fffff3;
+  border-radius: 50%;
+
+  background: #a89582;
+  color: #fff;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.mypage-avatar-edit:hover {
+  background: #8d7662;
+  transform: scale(1.06);
+}
+
+.mypage-avatar-edit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mypage-profile-name {
+  margin: 0;
+
+  font-size: 1.45rem;
+  font-weight: 700;
+
+  letter-spacing: -0.03em;
+}
+
+.mypage-profile-email {
+  margin: 8px 0 0;
+
+  color: #82766d;
+
+  font-size: 0.92rem;
+}
+
+.mypage-image-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  margin-top: 22px;
+}
+
+.mypage-image-button {
+  padding: 9px 18px;
+
+  border: 1px solid #a89582;
+  border-radius: 8px;
+
+  background: #a89582;
+  color: #fff;
+
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.mypage-image-button:hover {
+  background: #8d7662;
+  border-color: #8d7662;
+}
+
+.mypage-image-button.secondary {
+  background: transparent;
+  color: #8d7662;
+}
+
+.mypage-image-button.secondary:hover {
+  background: #f2e9df;
+}
+
+.mypage-image-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================
+   Section
+========================= */
+
+.mypage-section {
+  padding: 45px 0;
+
+  border-bottom: 1px solid #e8ddd2;
+}
+
+.mypage-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 32px;
+}
+
+.mypage-section-heading h2 {
+  margin: 0;
+
+  font-size: 1.25rem;
+  font-weight: 700;
+
+  letter-spacing: -0.03em;
+}
+
+.mypage-edit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 8px 12px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+  color: #92745d;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: background-color 0.2s ease;
+}
+
+.mypage-edit-button:hover {
+  background: #f2e9df;
+}
+
+/* =========================
+   Information Fields
+========================= */
+
+.mypage-fields {
+  display: flex;
+  flex-direction: column;
+
+  gap: 26px;
+}
+
+.mypage-field {
+  display: grid;
+
+  grid-template-columns: 130px minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: 24px;
+}
+
+.mypage-field label {
+  color: #82766d;
+
+  font-size: 0.93rem;
+  font-weight: 600;
+}
+
+.mypage-field-value {
+  min-width: 0;
+
+  padding: 12px 0;
+
+  color: #222;
+
+  font-size: 0.98rem;
+  font-weight: 500;
+
+  overflow-wrap: anywhere;
+}
+
+/* =========================
+   Edit Input
+========================= */
+
+.mypage-input {
+  width: 100%;
+  height: 48px;
+
+  padding: 0 15px;
+
+  border: 1.5px solid #ded1c4;
+  border-radius: 10px;
+
+  background: #fff;
+  color: #222;
+
+  font-family: inherit;
+  font-size: 0.95rem;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.mypage-input:focus {
+  border-color: #a89582;
+
+  box-shadow:
+    0 0 0 3px rgba(168, 149, 130, 0.12);
+}
+
+.mypage-select {
+  appearance: none;
+  -webkit-appearance: none;
+
+  padding-right: 40px;
+
+  cursor: pointer;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238d7662' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+}
+
+/* =========================
+   Edit Actions
+========================= */
+
+.mypage-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 12px;
+
+  margin-top: 32px;
+}
+
+.mypage-primary-button {
+  min-height: 46px;
+
+  padding: 0 24px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #a89582;
+  color: #fff;
+
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.mypage-primary-button:hover {
+  background: #8d7662;
+}
+
+.mypage-primary-button:active {
+  transform: scale(0.98);
+}
+
+.mypage-cancel-button {
+  min-height: 46px;
+
+  padding: 0 24px;
+
+  border: 1.5px solid #ded1c4;
+  border-radius: 9px;
+
+  background: transparent;
+  color: #6d6259;
+
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.mypage-cancel-button:hover {
+  background: #f2e9df;
+}
+
+.mypage-primary-button:disabled,
+.mypage-cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================
+   Account Management
+========================= */
+
+.mypage-account-section {
+  border-bottom: none;
+}
+
+.mypage-account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 22px 0;
+
+  border-bottom: 1px solid #eee5dc;
+}
+
+.mypage-account-row:last-child {
+  border-bottom: none;
+}
+
+.mypage-account-row h3 {
+  margin: 0 0 7px;
+
+  font-size: 0.98rem;
+  font-weight: 650;
+}
+
+.mypage-account-row p {
+  margin: 0;
+
+  color: #82766d;
+
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.mypage-outline-button {
+  flex-shrink: 0;
+
+  min-width: 105px;
+  min-height: 42px;
+
+  padding: 0 16px;
+
+  border: 1.5px solid #a89582;
+  border-radius: 9px;
+
+  background: transparent;
+  color: #8d7662;
+
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.mypage-outline-button:hover {
+  background: #a89582;
+  color: #fff;
+}
+
+/* =========================
+   Withdraw Button
+========================= */
+
+.mypage-danger-button {
+  flex-shrink: 0;
+
+  min-width: 105px;
+  min-height: 42px;
+
+  padding: 0 16px;
+
+  border: 1.5px solid #c98780;
+  border-radius: 9px;
+
+  background: transparent;
+  color: #b45e56;
+
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.mypage-danger-button:hover {
+  background: #b45e56;
+  color: #fff;
+}
+
+/* =========================
+   Messages
+========================= */
+
+.mypage-success {
+  margin: 24px 0 0;
+  padding: 13px 16px;
+
+  border: 1px solid #d1e2d0;
+  border-radius: 9px;
+
+  background: #f0f7ef;
+  color: #54845b;
+
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.mypage-error {
+  margin: 24px 0 0;
+  padding: 13px 16px;
+
+  border: 1px solid #edcbc7;
+  border-radius: 9px;
+
+  background: #fff2f0;
+  color: #c84c43;
+
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.mypage-loading {
+  margin: 100px 0;
+
+  color: #82766d;
+
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+/* =========================
+   Tablet
+========================= */
+
+@media (max-width: 900px) {
+  .mypage {
+    padding: 60px 30px 90px;
+  }
+
+  .mypage-container {
+    max-width: 680px;
+  }
+}
+
+/* =========================
+   Mobile
+========================= */
+
+@media (max-width: 600px) {
+  .mypage {
+    min-height: calc(100vh - 64px);
+
+    padding: 45px 20px 80px;
+  }
+
+  .mypage-heading {
+    margin-bottom: 40px;
+  }
+
+  .mypage-title {
+    font-size: 1.9rem;
+  }
+
+  .mypage-description {
+    font-size: 0.88rem;
+  }
+
+  .mypage-avatar-wrapper {
+    width: 112px;
+    height: 112px;
+  }
+
+  .mypage-avatar-edit {
+    width: 34px;
+    height: 34px;
+  }
+
+  .mypage-profile-name {
+    font-size: 1.3rem;
+  }
+
+  .mypage-profile {
+    padding-bottom: 38px;
+  }
+
+  .mypage-section {
+    padding: 35px 0;
+  }
+
+  .mypage-section-heading {
+    margin-bottom: 26px;
+  }
+
+  .mypage-section-heading h2 {
+    font-size: 1.15rem;
+  }
+
+  .mypage-fields {
+    gap: 22px;
+  }
+
+  .mypage-field {
+    grid-template-columns: 1fr;
+
+    gap: 7px;
+  }
+
+  .mypage-field-value {
+    padding: 8px 0;
+  }
+
+  .mypage-account-row {
+    gap: 14px;
+  }
+
+  .mypage-account-row h3 {
+    font-size: 0.92rem;
+  }
+
+  .mypage-account-row p {
+    font-size: 0.8rem;
+  }
+
+  .mypage-outline-button,
+  .mypage-danger-button {
+    min-width: 88px;
+    padding: 0 12px;
+
+    font-size: 0.82rem;
+  }
+}
+
+/* =========================
+   Withdraw Modal
+========================= */
+
+.mypage-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(35, 28, 22, 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.mypage-modal {
+  width: 100%;
+  max-width: 440px;
+
+  padding: 38px 36px 32px;
+
+  border: 1px solid #e8ddd2;
+  border-radius: 20px;
+
+  background: #fffff8;
+
+  box-shadow:
+    0 12px 40px rgba(70, 55, 40, 0.12),
+    0 24px 70px rgba(70, 55, 40, 0.08);
+
+  text-align: center;
+}
+
+.mypage-modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 54px;
+  height: 54px;
+
+  margin: 0 auto 22px;
+
+  border-radius: 50%;
+
+  background: #faeae7;
+  color: #b45e56;
+
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.mypage-modal h2 {
+  margin: 0;
+
+  color: #29231f;
+
+  font-size: 1.45rem;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+}
+
+.mypage-modal-description {
+  margin: 16px 0 24px;
+
+  color: #82766d;
+
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.mypage-modal-notice {
+  margin-bottom: 26px;
+  padding: 14px 16px;
+
+  border: 1px solid #eee1d5;
+  border-radius: 10px;
+
+  background: #f8f2e9;
+  color: #806c59;
+
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.mypage-modal-label {
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: #51463d;
+
+  text-align: left;
+
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.mypage-modal-input {
+  width: 100%;
+  height: 48px;
+
+  padding: 0 15px;
+
+  border: 1.5px solid #ded1c4;
+  border-radius: 10px;
+
+  background: #fff;
+  color: #222;
+
+  font-family: inherit;
+  font-size: 0.95rem;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.mypage-modal-input:focus {
+  border-color: #a89582;
+
+  box-shadow: 0 0 0 3px rgba(168, 149, 130, 0.12);
+}
+
+.mypage-modal-input::placeholder {
+  color: #b3a69a;
+}
+
+.mypage-modal-error {
+  margin: 10px 0 0;
+
+  color: #b45e56;
+
+  text-align: left;
+
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.mypage-modal-actions {
+  display: flex;
+  gap: 12px;
+
+  margin-top: 30px;
+}
+
+.mypage-modal-cancel,
+.mypage-modal-confirm {
+  flex: 1;
+
+  min-height: 48px;
+
+  border-radius: 10px;
+
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.mypage-modal-cancel {
+  border: 1.5px solid #ded1c4;
+
+  background: transparent;
+  color: #6d6259;
+}
+
+.mypage-modal-cancel:hover {
+  background: #f2e9df;
+}
+
+.mypage-modal-confirm {
+  border: 1.5px solid #b45e56;
+
+  background: #b45e56;
+  color: #fff;
+}
+
+.mypage-modal-confirm:hover:not(:disabled) {
+  background: #984a43;
+  border-color: #984a43;
+}
+
+.mypage-modal-cancel:disabled,
+.mypage-modal-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================
+   Mobile
+========================= */
+
+@media (max-width: 600px) {
+  .mypage-modal {
+    padding: 32px 24px 26px;
+    border-radius: 16px;
+  }
+
+  .mypage-modal h2 {
+    font-size: 1.3rem;
+  }
+
+  .mypage-modal-description {
+    font-size: 0.85rem;
+  }
+
+  .mypage-modal-actions {
+    gap: 10px;
+  }
+}
