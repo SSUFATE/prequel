@@ -11,7 +11,7 @@ import {
 } from "@/api/favorites";
 import { useAuth } from "@/app/lib/authContext";
 import SignupPromptModal from "@/components/SignupPromptModal";
-import { isAuthError } from "@/lib/isAuthError";
+import { isAuthError } from "@/api/isAuthError";
 
 type FavoriteBook = {
   id: number;
