@@ -26,3 +26,7 @@ Thumbs.db
 
 local_scripts/
 /backend/uploads/
+
+backend/.env.production
+compose.prod.yml.bak
+backend/Dockerfilethon*
