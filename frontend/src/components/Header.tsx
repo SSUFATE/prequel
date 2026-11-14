@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/lib/authContext";
-import { getAccessToken, logout as apiLogout } from "@/app/lib/api";
 
 export default function Header() {
   const { isLoggedIn, isLoading, logout } = useAuth();
@@ -23,14 +22,11 @@ export default function Header() {
   }, []);
 
   async function handleLogout() {
-    const token = getAccessToken();
-    if (token) {
-      try {
-        await apiLogout(token);
-      } catch {
-      }
+    try {
+      await logout();
+    } catch (error) {
+      console.error("로그아웃 요청 실패:", error);
     }
-    logout();
   }
 
   if (isLoading) {

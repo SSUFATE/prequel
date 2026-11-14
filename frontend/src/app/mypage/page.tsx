@@ -3,10 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/lib/authContext";
-import {
-  getAccessToken,
-  logout as apiLogout,
-} from "@/app/lib/api";
 
 import {
   getMyInfo,
@@ -25,6 +21,7 @@ const LANGUAGE_LABELS: Record<Language, string> = {
   ko: "한국어",
   en: "English",
   ja: "日本語",
+  zh: "中文",
 };
 
 export default function MyPage() {
@@ -231,18 +228,12 @@ export default function MyPage() {
   // =========================
 
   async function handleLogout() {
-    const token = getAccessToken();
-
-    if (token) {
-      try {
-        await apiLogout(token);
-      } catch {
-        // 서버 요청이 실패해도 로컬 로그인 상태는 해제
-      }
+    try {
+      await logout();
+      router.replace("/");
+    } catch {
+      setError("로그아웃 요청에 실패했습니다. 다시 시도해주세요.");
     }
-
-    logout();
-    router.replace("/");
   }
 
   // =========================
@@ -261,7 +252,11 @@ export default function MyPage() {
     setShowWithdrawModal(false);
     setWithdrawPassword("");
 
-    logout();
+    try {
+      await logout();
+    } catch {
+      // 회원 탈퇴는 이미 완료되었으므로 이동은 계속 진행
+    }
     router.replace("/");
   } catch (err) {
     setWithdrawError(
@@ -516,6 +511,7 @@ export default function MyPage() {
                   <option value="ko">한국어</option>
                   <option value="en">English</option>
                   <option value="ja">日本語</option>
+                  <option value="zh">中文</option>
                 </select>
               ) : (
                 <div className="mypage-field-value">

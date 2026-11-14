@@ -1,7 +1,6 @@
 "use client";
 
-import axios from "axios";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 
 import "./recommendations.css";
@@ -61,6 +60,15 @@ export default function RecommendationPage() {
   const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const PAGE_SIZE = 10;
+
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const loadingRef = useRef(false);
+
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
 
   // [추가]
@@ -92,35 +100,120 @@ export default function RecommendationPage() {
   useEffect(() => {
     if (!Number.isFinite(contentId)) return;
 
+    let cancelled = false;
+
     const fetchRecommendations = async () => {
       try {
+        loadingRef.current = true;
+
         setIsRecommendationsLoading(true);
         setError(null);
+        setRecommendations([]);
+        setOffset(0);
+        setHasMore(true);
 
         const data = await getRecommendations(contentId, {
-          limit: 20,
+          limit: PAGE_SIZE,
+          offset: 0,
           category: selectedTheme === "ALL" ? undefined : selectedTheme,
         });
 
         setRecommendations(data.recommendations);
+        setOffset(data.recommendations.length);
+        setHasMore(data.recommendations.length === PAGE_SIZE);
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.log("요청 URL:", error.config?.url);
-          console.log("상태 코드:", error.response?.status);
-          console.log("에러 내용:", error.response?.data);
-        }
+        if (cancelled) return;
 
-        setRecommendations([]);
+        console.error("추천 작품 조회 실패:", error);
         setError("추천 작품을 불러오지 못했어요.");
+        setHasMore(false);
       } finally {
-        setIsRecommendationsLoading(false);
+        if (!cancelled) {
+          loadingRef.current = false;
+          setIsRecommendationsLoading(false);
+      }
       }
     };
 
     fetchRecommendations();
+
+    return () => {
+      cancelled = true;
+    };
   }, [contentId, selectedTheme]);
 
-  // 찜 목록 조회  [수정]
+
+  // 스크롤 하단 도달 시 추천 문학 추가 조회
+  useEffect(() => {
+    const target = loadMoreRef.current;
+
+    if (!target || !hasMore || isRecommendationsLoading) return;
+
+    let cancelled = false;
+
+    const observer = new IntersectionObserver(
+      async ([entry]) => {
+        if (!entry.isIntersecting || loadingRef.current) return;
+
+        loadingRef.current = true;
+        setIsLoadingMore(true);
+
+        try {
+          const data = await getRecommendations(contentId, {
+            limit: PAGE_SIZE,
+            offset,
+            category: selectedTheme === "ALL" ? undefined : selectedTheme,
+          });
+
+          if (cancelled) return;
+
+          setRecommendations((prev) => {
+            const existingIds = new Set(prev.map((item) => item.work_id));
+
+            const newItems = data.recommendations.filter(
+              (item) => !existingIds.has(item.work_id)
+            );
+
+            return [...prev, ...newItems];
+          });
+
+          setOffset((prev) => prev + data.recommendations.length);
+
+          setHasMore(data.recommendations.length === PAGE_SIZE);
+        } catch (error) {
+          if (cancelled) return;
+
+          console.error("추가 추천 조회 실패:", error);
+          setHasMore(false);
+          setError("추가 추천 작품을 불러오지 못했어요.");
+        } finally {
+          if (!cancelled) {
+            loadingRef.current = false;
+            setIsLoadingMore(false);
+          }
+        }
+      },
+      {
+        rootMargin: "300px",
+      }
+    );
+
+    observer.observe(target);
+
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, [
+    contentId,
+    selectedTheme,
+    offset,
+    hasMore,
+    isRecommendationsLoading,
+  ]);
+
+  
+  // 찜 목록 조회
   useEffect(() => {
     // 비로그인이면 호출 자체를 건너뜀 (모달은 하트 클릭 때만 띄움)
     if (!isLoggedIn) {
@@ -438,6 +531,19 @@ export default function RecommendationPage() {
                 </article>
               );
             })}
+
+            {/* 무한 스크롤 감지 영역 */}
+            {hasMore && (
+              <div
+                ref={loadMoreRef}
+                className="recommendation-load-more"
+              >
+                {isLoadingMore && (
+                  <p>추천 문학을 더 불러오는 중...</p>
+                )}
+              </div>
+            )}
+            
           </section>
         ) : (
           <section className="recommendation-empty">
