@@ -35,5 +35,6 @@ export interface RecommendationResponse {
 
 export interface RecommendationParams {
   limit?: number;
+  offset?: number;
   category?: TagCategory;
 }

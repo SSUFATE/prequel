@@ -1,9 +1,11 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+import type {
+  MessageResponse,
+  SignupPayload,
+} from "@/types/auth";
 
-export type TokenResponse = {
-  access_token: string;
-  token_type: string;
-};
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
+
 
 export class ApiError extends Error {
   status: number;
@@ -28,9 +30,11 @@ async function parseErrorDetail(res: Response, fallback: string): Promise<string
 }
 
 
-export async function login(loginId: string, password: string): Promise<TokenResponse> {
+// ---------- 인증 관련 API ----------
+export async function login(loginId: string, password: string): Promise<MessageResponse> {
   const res = await fetch(`${API_BASE_URL}/auth/login`, {
     method: "POST",
+    credentials: "include", // 쿠키를 포함한 요청을 허용
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
@@ -48,18 +52,10 @@ export async function login(loginId: string, password: string): Promise<TokenRes
   return res.json();
 }
 
-
-export type SignupPayload = {
-  login_id: string;
-  password: string;
-  username: string;
-  email: string;
-  language: string;
-};
-
 export async function signup(payload: SignupPayload) {
   const res = await fetch(`${API_BASE_URL}/auth/signup`, {
     method: "POST",
+    credentials: "include", // 쿠키를 포함한 요청을 허용
     headers: {
       "Content-Type": "application/json",
     },
@@ -77,29 +73,57 @@ export async function signup(payload: SignupPayload) {
   return res.json();
 }
 
+// ---------- 회원가입 중복 확인 ----------
 
-export async function fetchCurrentUser(token: string) {
-  const res = await fetch(`${API_BASE_URL}/users/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export async function checkLoginId(
+  loginId: string,
+  signal?: AbortSignal
+): Promise<boolean> {
+  const params = new URLSearchParams({ login_id: loginId });
+
+  const res = await fetch(
+    `${API_BASE_URL}/auth/check-login-id?${params}`,
+    { signal }
+  );
 
   if (!res.ok) {
-    const detail = await parseErrorDetail(res, "사용자 정보를 불러오지 못했습니다.");
-    throw new ApiError(res.status, detail);
+    throw new ApiError(
+      res.status,
+      await parseErrorDetail(res, "아이디 중복 확인에 실패했습니다.")
+    );
   }
 
-  return res.json();
+  const data: { available: boolean } = await res.json();
+  return data.available;
 }
 
+export async function checkEmail(
+  email: string,
+  signal?: AbortSignal
+): Promise<boolean> {
+  const params = new URLSearchParams({ email });
 
-export async function logout(token: string) {
+  const res = await fetch(
+    `${API_BASE_URL}/auth/check-email?${params}`,
+    { signal }
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      res.status,
+      await parseErrorDetail(res, "이메일 중복 확인에 실패했습니다.")
+    );
+  }
+
+  const data: { available: boolean } = await res.json();
+  return data.available;
+}
+
+// ---------- 로그아웃 ----------
+export async function logout(): Promise<MessageResponse> {
   const res = await fetch(`${API_BASE_URL}/auth/logout`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: "include", // 쿠키를 포함한 요청을 허용
   });
 
   if (!res.ok) {
@@ -108,25 +132,4 @@ export async function logout(token: string) {
   }
 
   return res.json();
-}
-
-// ---------- Access token 저장 (localStorage) ----------
-
-const ACCESS_TOKEN_KEY = "prequel_access_token";
-
-export function saveAccessToken(token: string) {
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(ACCESS_TOKEN_KEY, token);
-  }
-}
-
-export function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(ACCESS_TOKEN_KEY);
-}
-
-export function clearAccessToken() {
-  if (typeof window !== "undefined") {
-    window.localStorage.removeItem(ACCESS_TOKEN_KEY);
-  }
 }

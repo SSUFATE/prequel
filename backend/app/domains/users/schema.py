@@ -40,11 +40,6 @@ class UserResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-# 로그인 성공 응답
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str
-
 # 회원정보 수정 요청
 class UserUpdate(BaseModel):
     username: str | None = Field(default=None, min_length=1, max_length=50)
@@ -52,7 +47,7 @@ class UserUpdate(BaseModel):
     password: str | None = Field(default=None, min_length=8, max_length=100)
     language: Language | None = None
 
-#
+# 인증 성공 응답
 class MessageResponse(BaseModel):
     message: str
 

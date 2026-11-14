@@ -1,6 +1,6 @@
-import { getAccessToken } from "@/app/lib/api";
+import { API_BASE_URL, ApiError } from "@/api/auth";
 
-export type Language = "ko" | "en" | "ja";
+export type Language = "ko" | "en" | "ja" | "zh";
 
 export interface UserResponse {
   user_id: number;
@@ -22,40 +22,32 @@ export interface UserUpdate {
   language?: Language;
 }
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-
 
 async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getAccessToken();
-
-  if (!token) {
-    throw new Error("로그인이 필요합니다.");
-  }
-
-  const response = await fetch(
-    `${API_BASE_URL}${path}`,
-    {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...options.headers,
-      },
-      cache: "no-store",
-    }
-  );
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    credentials: "include",
+    cache: "no-store",
+  });
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("auth:unauthorized"));
+    }
+
     const error = await response.json().catch(() => null);
 
-    throw new Error(
+    const message =
       typeof error?.detail === "string"
         ? error.detail
-        : "요청을 처리하지 못했습니다."
-    );
+        : response.status === 401
+          ? "로그인이 필요하거나 인증이 만료되었습니다."
+          : "요청을 처리하지 못했습니다.";
+
+    throw new ApiError(response.status, message);
   }
 
   return response.json() as Promise<T>;
@@ -131,9 +123,6 @@ export function getProfileImageUrl(
   ) {
     return imageUrl;
   }
-
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
   const SERVER_URL = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
 

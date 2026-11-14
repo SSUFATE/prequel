@@ -28,6 +28,7 @@ def get_recommendations_by_content_id(
     db: Session,
     content_id: int,
     limit: int = 5,
+    offset: int = 0,
     category: TagCategory | None = None,
 ):
     # 1. 콘텐츠 태그 조회
@@ -55,6 +56,7 @@ def get_recommendations_by_content_id(
         db=db,
         content_id=content_id,
         limit=limit,
+        offset=offset,
         category=category,
     )
 
@@ -320,6 +322,7 @@ def get_hybrid_recommendations_by_content_id(
     db: Session,
     content_id: int,
     limit: int = 5,
+    offset: int = 0,
 ):
     # 1. K콘텐츠 조회
     content = get_kcontent_by_id(
@@ -336,6 +339,7 @@ def get_hybrid_recommendations_by_content_id(
             db=db,
             content_id=content_id,
             limit=limit,
+            offset=offset,
         )
 
     # 2. 태그 유사도 정규화에 필요한 최대 점수
@@ -434,7 +438,7 @@ def get_hybrid_recommendations_by_content_id(
         key=lambda item: (-item[1], item[0].work_id)
     )
 
-    selected_works = hybrid_works[:limit]
+    selected_works = hybrid_works[offset:offset + limit]
 
     # 10. 추천 작품의 공통 태그 조회
     selected_work_ids = [

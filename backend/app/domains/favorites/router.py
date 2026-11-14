@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.core.security import get_current_user
+from app.domains.users.dependencies import get_authenticated_user
 from app.domains.favorites.service import FavoriteService
 from app.domains.favorites.schema import FavoriteWorkResponse
 from app.domains.users.model import User
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/favorites", tags=["favorites"])
 @router.get("", response_model=list[FavoriteWorkResponse])
 def get_my_favorite_works(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_authenticated_user),
 ):
     """로그인한 사용자가 찜한 문학작품 목록 조회"""
     service = FavoriteService(db)
@@ -26,7 +26,7 @@ from app.domains.favorites.schema import FavoriteResponse
 def add_favorite(
     work_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_authenticated_user),
 ):
     """작품 찜하기"""
     service = FavoriteService(db)
@@ -41,7 +41,7 @@ def add_favorite(
 def remove_favorite(
     work_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_authenticated_user),
 ):
     """찜 해제"""
     service = FavoriteService(db)

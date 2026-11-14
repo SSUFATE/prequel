@@ -37,6 +37,7 @@ def get_tag_scored_literatures(
     limit: int = 5,
     category: TagCategory | None = None,
     work_ids: list[int] | None = None,
+    offset: int = 0,
 ):
     score_expression = func.sum(
         KContentTag.weight * LiteraryWorkTag.weight
@@ -88,7 +89,7 @@ def get_tag_scored_literatures(
 
     # 후보 ID가 주어지면 해당 후보의 점수를 모두 조회
     if work_ids is None:
-        query = query.limit(limit)
+        query = query.offset(offset).limit(limit)
 
     return query.all()
 

@@ -6,7 +6,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { ApiError, login as loginRequest } from "@/app/lib/api";
+import { ApiError, login as loginRequest } from "@/api/auth";
 import { useAuth } from "@/app/lib/authContext";
 
 type LoginError =
@@ -55,9 +55,9 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const { access_token } = await loginRequest(id.trim(), password);
+      await loginRequest(id.trim(), password);
 
-      auth.login(access_token);
+      await auth.login();
       router.push("/");
     } catch (err) {
       if (err instanceof ApiError) {

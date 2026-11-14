@@ -2,23 +2,6 @@ export function getApiBaseUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 }
 
-const TOKEN_STORAGE_KEY = "prequel_access_token";
-
-export function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_STORAGE_KEY);
-}
-
-export function setAccessToken(token: string) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(TOKEN_STORAGE_KEY, token);
-}
-
-export function clearAccessToken() {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(TOKEN_STORAGE_KEY);
-}
-
 async function extractErrorMessage(res: Response): Promise<string> {
   try {
     const json = await res.json();
@@ -36,80 +19,80 @@ async function extractErrorMessage(res: Response): Promise<string> {
   }
 }
 
-interface RequestOptions {
-  auth?: boolean;
-}
+// 공통 API 요청 함수
+async function request<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const res = await fetch(`${getApiBaseUrl()}${path}`, {
+    ...options,
+    credentials: "include",
+    cache: "no-store",
+  });
 
-export async function apiGet<T>(path: string, options?: RequestOptions): Promise<T> {
-  const headers: Record<string, string> = {};
-  if (options?.auth) {
-    const token = getAccessToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
+  if (!res.ok) {
+    if (res.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("auth:unauthorized"));
+    }
+
+    throw new Error(await extractErrorMessage(res));
   }
 
-  const res = await fetch(`${getApiBaseUrl()}${path}`, { method: "GET", headers });
-  if (!res.ok) throw new Error(await extractErrorMessage(res));
-  return res.json();
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
+// GET
+export async function apiGet<T>(
+  path: string
+): Promise<T> {
+  return request<T>(path, {
+    method: "GET",
+  });
+}
+
+// POST - JSON
 export async function apiPostJson<T>(
   path: string,
-  body: unknown,
-  options?: RequestOptions
+  body: unknown
 ): Promise<T> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (options?.auth) {
-    const token = getAccessToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
-  }
-
-  const res = await fetch(`${getApiBaseUrl()}${path}`, {
+  return request<T>(path, {
     method: "POST",
-    headers,
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(await extractErrorMessage(res));
-
-
-  const text = await res.text();
-  return (text ? JSON.parse(text) : undefined) as T;
 }
 
-export async function apiPostForm<T>(path: string, form: Record<string, string>): Promise<T> {
-  const body = new URLSearchParams(form);
-
-  const res = await fetch(`${getApiBaseUrl()}${path}`, {
+// POST - Form
+export async function apiPostForm<T>(
+  path: string,
+  form: Record<string, string>
+): Promise<T> {
+  return request<T>(path, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams(form),
   });
-  if (!res.ok) throw new Error(await extractErrorMessage(res));
-  return res.json();
 }
 
-export async function apiPostEmpty<T>(path: string, options?: RequestOptions): Promise<T> {
-  const headers: Record<string, string> = {};
-  if (options?.auth) {
-    const token = getAccessToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
-  }
-
-  const res = await fetch(`${getApiBaseUrl()}${path}`, { method: "POST", headers });
-  if (!res.ok) throw new Error(await extractErrorMessage(res));
-  return res.json();
+// POST - Empty
+export async function apiPostEmpty<T>(
+  path: string
+): Promise<T> {
+  return request<T>(path, {
+    method: "POST",
+  });
 }
 
-export async function apiDelete<T = void>(path: string, options?: RequestOptions): Promise<T> {
-  const headers: Record<string, string> = {};
-  if (options?.auth) {
-    const token = getAccessToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
-  }
-
-  const res = await fetch(`${getApiBaseUrl()}${path}`, { method: "DELETE", headers });
-  if (!res.ok) throw new Error(await extractErrorMessage(res));
-
-
-  const text = await res.text();
-  return (text ? JSON.parse(text) : undefined) as T;
+// DELETE
+export async function apiDelete<T = void>(
+  path: string
+): Promise<T> {
+  return request<T>(path, {
+    method: "DELETE",
+  });
 }

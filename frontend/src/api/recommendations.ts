@@ -17,6 +17,7 @@ export const getRecommendations = async (
     {
       params: {
         limit: params.limit ?? 20,
+        offset: params.offset ?? 0,
         ...(params.category && { category: params.category }),
       },
     }
